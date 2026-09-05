@@ -39,13 +39,13 @@
         <!-- Navigation Tabs -->
         <nav class="bg-slate-800 border-t border-slate-700 overflow-x-auto">
             <div class="max-w-7xl mx-auto px-4 flex gap-1 py-2 text-sm font-medium whitespace-nowrap">
-                <button onclick="switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-md bg-indigo-600 text-white transition hover:bg-indigo-500"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
-                <button onclick="switchTab('insumos')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Materiales</button>
-                <button onclick="switchTab('servicios')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios Publicitarios</button>
-                <button onclick="switchTab('calculadora')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotización</button>
-                <button onclick="switchTab('facturacion')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-cash-register mr-2"></i>Facturación / Caja</button>
-                <button onclick="switchTab('crm')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
-                <button onclick="switchTab('config')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-gear mr-2"></i>Configurar Logo</button>
+                <button onclick="switchTab('dashboard', this)" class="tab-btn px-4 py-2 rounded-md bg-indigo-600 text-white transition hover:bg-indigo-500"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+                <button onclick="switchTab('insumos', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Materiales</button>
+                <button onclick="switchTab('servicios', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios Publicitarios</button>
+                <button onclick="switchTab('calculadora', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotización</button>
+                <button onclick="switchTab('facturacion', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-cash-register mr-2"></i>Facturación / Caja</button>
+                <button onclick="switchTab('crm', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
+                <button onclick="switchTab('config', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-gear mr-2"></i>Configurar Logo</button>
             </div>
         </nav>
     </header>
@@ -312,7 +312,7 @@
         <section id="config" class="tab-content space-y-6">
             <h2 class="text-2xl font-bold text-slate-800">Configuración del Logotipo</h2>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-md space-y-4">
-                <label class="block text-sm font-medium text-slate-700">Cargar o Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
+                <label class="block text-sm font-medium text-slate-700">Cargar or Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
                 <input type="file" id="logoInput" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                 <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo</button>
             </div>
@@ -448,15 +448,17 @@
             document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
         }, 1000);
 
-        function switchTab(tabId) {
+        function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-indigo-600', 'text-white');
                 el.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
             });
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('bg-indigo-600', 'text-white');
-            event.currentTarget.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            if (btnElement) {
+                btnElement.classList.add('bg-indigo-600', 'text-white');
+                btnElement.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            }
         }
 
         // LOGO
@@ -701,7 +703,7 @@
             
             facturaActualItems = [...cotizacionActualItems];
             renderFacturacionItems();
-            switchTab('facturacion');
+            switchTab('facturacion', document.querySelector("button[onclick*='facturacion']"));
         }
 
         function generarPDFCotizacion() {
