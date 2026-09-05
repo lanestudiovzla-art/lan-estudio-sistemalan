@@ -242,7 +242,29 @@
                         <option value="">-- Seleccionar Cliente --</option>
                     </select>
 
-                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Resumen del Ticket</h3>
+                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos al Ticket</h3>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
+                        <div class="flex gap-2">
+                            <select id="factInsumoSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
+                                <option value="">-- Seleccionar Insumo --</option>
+                            </select>
+                            <input type="number" id="factInsumoCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
+                            <button onclick="agregarInsumoAFacturacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Servicio</label>
+                        <div class="flex gap-2">
+                            <select id="factServicioSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
+                                <option value="">-- Seleccionar Servicio --</option>
+                            </select>
+                            <input type="number" id="factServicioCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
+                            <button onclick="agregarServicioAFacturacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">Resumen del Ticket</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead>
@@ -250,10 +272,11 @@
                                     <th class="py-2">Descripción</th>
                                     <th class="py-2 text-center">Cant.</th>
                                     <th class="py-2 text-right">Subtotal ($)</th>
+                                    <th class="py-2 text-right">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="factItemsBody" class="divide-y divide-slate-100">
-                                <tr><td colspan="3" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>
+                                <tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -700,7 +723,7 @@
         document.getElementById('bcvRate').addEventListener('input', calcularTotalesCotizacion);
 
         function enviarCotizacionAFacturacion() {
-            if(cotizacionActualItems.length === 0) { alert('Agregue elementos a la cotización primero.'); return; }
+            if(cotizacionActualItems.length === 0) { alert('Agregue elementos al presupuesto primero.'); return; }
             facturaActualItems = [...cotizacionActualItems];
             renderFacturacionItems();
             switchTab('facturacion', document.querySelector("button[onclick*='facturacion']"));
@@ -723,23 +746,49 @@
             html2pdf().from(element).save();
         }
 
+        function agregarInsumoAFacturacion() {
+            const id = document.getElementById('factInsumoSelect').value;
+            const cant = parseInt(document.getElementById('factInsumoCant').value) || 1;
+            const insumo = db.insumos.find(i => i.id === id);
+            if(!insumo) return;
+
+            facturaActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
+            renderFacturacionItems();
+        }
+
+        function agregarServicioAFacturacion() {
+            const id = document.getElementById('factServicioSelect').value;
+            const cant = parseInt(document.getElementById('factServicioCant').value) || 1;
+            const servicio = db.servicios.find(s => s.id === id);
+            if(!servicio) return;
+
+            facturaActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
+            renderFacturacionItems();
+        }
+
+        function quitarItemFacturacion(index) {
+            facturaActualItems.splice(index, 1);
+            renderFacturacionItems();
+        }
+
         function renderFacturacionItems() {
             const tbody = document.getElementById('factItemsBody');
             if(facturaActualItems.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>';
                 document.getElementById('factTotalDolares').innerText = '$0.00';
                 document.getElementById('factTotalBs').innerText = 'Bs. 0.00';
                 return;
             }
             let html = '';
             let total = 0;
-            facturaActualItems.forEach(item => {
+            facturaActualItems.forEach((item, index) => {
                 const subtotal = item.precio * item.cant;
                 total += subtotal;
                 html += '<tr>' +
-                    '<td class="py-2">' + item.desc + '</td>' +
+                    '<td class="py-2">' + item.desc + ' <span class="text-xs text-indigo-500">(' + item.tipo + ')</span></td>' +
                     '<td class="py-2 text-center">' + item.cant + '</td>' +
                     '<td class="py-2 text-right">$' + subtotal.toFixed(2) + '</td>' +
+                    '<td class="py-2 text-right"><button onclick="quitarItemFacturacion(' + index + ')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>' +
                 '</tr>';
             });
             tbody.innerHTML = html;
@@ -755,6 +804,16 @@
             const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
             const total = facturaActualItems.reduce((acc, item) => acc + (item.precio * item.cant), 0);
 
+            // Descontar inventario de insumos vendidos
+            facturaActualItems.forEach(item => {
+                if(item.tipo === 'Insumo') {
+                    const ins = db.insumos.find(i => i.id === item.id);
+                    if(ins) {
+                        ins.stock = Math.max(0, ins.stock - item.cant);
+                    }
+                }
+            });
+
             db.ventas.push({
                 fecha: new Date().toLocaleDateString(),
                 cliente: cliente ? cliente.nombre : 'Público General',
@@ -765,7 +824,7 @@
             facturaActualItems = [];
             renderFacturacionItems();
             persistir();
-            alert('¡Venta procesada y guardada con éxito!');
+            alert('¡Venta procesada con éxito y stock actualizado!');
         }
 
         function renderTablas() {
@@ -830,8 +889,13 @@
             document.getElementById('cotClienteSelect').innerHTML = optCli;
             document.getElementById('factClienteSelect').innerHTML = optCli;
 
-            document.getElementById('cotInsumoSelect').innerHTML = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => '<option value="' + i.id + '">' + i.desc + ' ($' + i.costo + ')</option>').join('');
-            document.getElementById('cotServicioSelect').innerHTML = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => '<option value="' + s.id + '">' + s.nombre + ' ($' + s.precio + ')</option>').join('');
+            const optIns = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => '<option value="' + i.id + '">' + i.desc + ' ($' + i.costo + ')</option>').join('');
+            document.getElementById('cotInsumoSelect').innerHTML = optIns;
+            document.getElementById('factInsumoSelect').innerHTML = optIns;
+
+            const optServ = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => '<option value="' + s.id + '">' + s.nombre + ' ($' + s.precio + ')</option>').join('');
+            document.getElementById('cotServicioSelect').innerHTML = optServ;
+            document.getElementById('factServicioSelect').innerHTML = optServ;
         }
 
         function actualizarDashboard() {
