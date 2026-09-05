@@ -312,7 +312,7 @@
         <section id="config" class="tab-content space-y-6">
             <h2 class="text-2xl font-bold text-slate-800">Configuración del Logotipo</h2>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-md space-y-4">
-                <label class="block text-sm font-medium text-slate-700">Cargar or Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
+                <label class="block text-sm font-medium text-slate-700">Cargar o Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
                 <input type="file" id="logoInput" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                 <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo</button>
             </div>
@@ -418,7 +418,6 @@
 
     <!-- Script de Funcionalidad Integral -->
     <script>
-        // Estado Global LocalStorage
         let db = {
             insumos: JSON.parse(localStorage.getItem('lan_insumos')) || [],
             servicios: JSON.parse(localStorage.getItem('lan_servicios')) || [],
@@ -441,7 +440,6 @@
             renderSelects();
         }
 
-        // Reloj y Fecha
         setInterval(() => {
             const now = new Date();
             document.getElementById('liveClock').innerText = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
@@ -461,17 +459,17 @@
             }
         }
 
-        // LOGO
         if(db.logo) {
-            document.getElementById('logoContainer').innerHTML = `<img src="${db.logo}" class="w-full h-full object-cover">`;
+            document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
         }
+
         function guardarLogo() {
             const fileInput = document.getElementById('logoInput');
             if(fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     db.logo = e.target.result;
-                    document.getElementById('logoContainer').innerHTML = `<img src="${db.logo}" class="w-full h-full object-cover">`;
+                    document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
                     persistir();
                     alert('Logo actualizado con éxito.');
                 }
@@ -479,7 +477,6 @@
             }
         }
 
-        // INSUMOS CRUD
         function openInsumoModal(id = null) {
             document.getElementById('insumoEditId').value = id || '';
             if(id) {
@@ -502,10 +499,12 @@
             document.getElementById('insumoModal').classList.remove('hidden');
             document.getElementById('insumoModal').classList.add('flex');
         }
+
         function closeInsumoModal() {
             document.getElementById('insumoModal').classList.add('hidden');
             document.getElementById('insumoModal').classList.remove('flex');
         }
+
         function guardarInsumo() {
             const id = document.getElementById('insumoEditId').value;
             const codigo = document.getElementById('insumoCodigo').value;
@@ -526,6 +525,7 @@
             closeInsumoModal();
             persistir();
         }
+
         function eliminarInsumo(id) {
             if(confirm('¿Eliminar este insumo?')) {
                 db.insumos = db.insumos.filter(i => i.id !== id);
@@ -533,7 +533,6 @@
             }
         }
 
-        // SERVICIOS CRUD
         function openServicioModal(id = null) {
             document.getElementById('servicioEditId').value = id || '';
             if(id) {
@@ -551,10 +550,12 @@
             document.getElementById('servicioModal').classList.remove('hidden');
             document.getElementById('servicioModal').classList.add('flex');
         }
+
         function closeServicioModal() {
             document.getElementById('servicioModal').classList.add('hidden');
             document.getElementById('servicioModal').classList.remove('flex');
         }
+
         function guardarServicio() {
             const id = document.getElementById('servicioEditId').value;
             const codigo = document.getElementById('servCodigo').value;
@@ -572,6 +573,7 @@
             closeServicioModal();
             persistir();
         }
+
         function eliminarServicio(id) {
             if(confirm('¿Eliminar este servicio?')) {
                 db.servicios = db.servicios.filter(s => s.id !== id);
@@ -579,7 +581,6 @@
             }
         }
 
-        // CLIENTES CRUD
         function openClienteModal(id = null) {
             document.getElementById('clienteEditId').value = id || '';
             if(id) {
@@ -599,10 +600,12 @@
             document.getElementById('clienteModal').classList.remove('hidden');
             document.getElementById('clienteModal').classList.add('flex');
         }
+
         function closeClienteModal() {
             document.getElementById('clienteModal').classList.add('hidden');
             document.getElementById('clienteModal').classList.remove('flex');
         }
+
         function guardarCliente() {
             const id = document.getElementById('clienteEditId').value;
             const cliId = document.getElementById('cliId').value;
@@ -621,6 +624,7 @@
             closeClienteModal();
             persistir();
         }
+
         function eliminarCliente(id) {
             if(confirm('¿Eliminar este cliente?')) {
                 db.clientes = db.clientes.filter(c => c.id !== id);
@@ -628,7 +632,6 @@
             }
         }
 
-        // COTIZADOR
         function agregarInsumoACotizacion() {
             const id = document.getElementById('cotInsumoSelect').value;
             const cant = parseInt(document.getElementById('cotInsumoCant').value) || 1;
@@ -669,16 +672,16 @@
             cotizacionActualItems.forEach((item, index) => {
                 const subtotal = item.precio * item.cant;
                 costoBase += subtotal;
-                html += `<tr>
-                    <td class="py-2">${item.desc} <span class="text-xs text-indigo-500">(${item.tipo})</span></td>
-                    <td class="py-2 text-center">${item.cant}</td>
-                    <td class="py-2 text-right">$${item.precio.toFixed(2)}</td>
-                    <td class="py-2 text-right font-medium">$${subtotal.toFixed(2)}</td>
-                    <td class="py-2 text-right"><button onclick="quitarItemCotizacion(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>`;
+                html += '<tr>' +
+                    '<td class="py-2">' + item.desc + ' <span class="text-xs text-indigo-500">(' + item.tipo + ')</span></td>' +
+                    '<td class="py-2 text-center">' + item.cant + '</td>' +
+                    '<td class="py-2 text-right">$' + item.precio.toFixed(2) + '</td>' +
+                    '<td class="py-2 text-right font-medium">$' + subtotal.toFixed(2) + '</td>' +
+                    '<td class="py-2 text-right"><button onclick="quitarItemCotizacion(' + index + ')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>' +
+                '</tr>';
             });
             tbody.innerHTML = html;
-            document.getElementById('cotCostoBase').innerText = `$${costoBase.toFixed(2)}`;
+            document.getElementById('cotCostoBase').innerText = '$' + costoBase.toFixed(2);
             
             const margen = parseFloat(document.getElementById('cotMargen').value) || 0;
             const sugerido = costoBase * (1 + margen / 100);
@@ -690,7 +693,7 @@
             const totalUSD = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
             const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
             const totalBs = totalUSD * tasaBCV;
-            document.getElementById('cotTotalBs').innerText = `Bs. ${totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('cotTotalBs').innerText = 'Bs. ' + totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         document.getElementById('cotPrecioEditable').addEventListener('input', calcularTotalesCotizacion);
@@ -698,9 +701,6 @@
 
         function enviarCotizacionAFacturacion() {
             if(cotizacionActualItems.length === 0) { alert('Agregue elementos a la cotización primero.'); return; }
-            const totalUSD = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
-            const proyecto = document.getElementById('cotProyectoNombre').value || 'Cotización General';
-            
             facturaActualItems = [...cotizacionActualItems];
             renderFacturacionItems();
             switchTab('facturacion', document.querySelector("button[onclick*='facturacion']"));
@@ -723,7 +723,6 @@
             html2pdf().from(element).save();
         }
 
-        // FACTURACIÓN
         function renderFacturacionItems() {
             const tbody = document.getElementById('factItemsBody');
             if(facturaActualItems.length === 0) {
@@ -737,16 +736,16 @@
             facturaActualItems.forEach(item => {
                 const subtotal = item.precio * item.cant;
                 total += subtotal;
-                html += `<tr>
-                    <td class="py-2">${item.desc}</td>
-                    <td class="py-2 text-center">${item.cant}</td>
-                    <td class="py-2 text-right">$${subtotal.toFixed(2)}</td>
-                </tr>`;
+                html += '<tr>' +
+                    '<td class="py-2">' + item.desc + '</td>' +
+                    '<td class="py-2 text-center">' + item.cant + '</td>' +
+                    '<td class="py-2 text-right">$' + subtotal.toFixed(2) + '</td>' +
+                '</tr>';
             });
             tbody.innerHTML = html;
-            document.getElementById('factTotalDolares').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('factTotalDolares').innerText = '$' + total.toFixed(2);
             const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
-            document.getElementById('factTotalBs').innerText = `Bs. ${(total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits: 2})`;
+            document.getElementById('factTotalBs').innerText = 'Bs. ' + (total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits: 2});
         }
 
         function procesarFactura() {
@@ -769,86 +768,81 @@
             alert('¡Venta procesada y guardada con éxito!');
         }
 
-        // RENDERIZADO GENERAL
         function renderTablas() {
-            // Insumos
             const tbodyIns = document.getElementById('tablaInsumosBody');
             if(db.insumos.length === 0) {
                 tbodyIns.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>';
             } else {
-                tbodyIns.innerHTML = db.insumos.map(i => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="p-3 font-medium">${i.codigo}</td>
-                        <td class="p-3">${i.desc}</td>
-                        <td class="p-3">${i.cat}</td>
-                        <td class="p-3">$${i.costo.toFixed(2)}</td>
-                        <td class="p-3 ${i.stock <= i.minimo ? 'text-red-600 font-bold' : ''}">${i.stock}</td>
-                        <td class="p-3">${i.minimo}</td>
-                        <td class="p-3 text-right space-x-2">
-                            <button onclick="openInsumoModal('${i.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="eliminarInsumo('${i.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbodyIns.innerHTML = db.insumos.map(i => 
+                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+                        '<td class="p-3 font-medium">' + i.codigo + '</td>' +
+                        '<td class="p-3">' + i.desc + '</td>' +
+                        '<td class="p-3">' + i.cat + '</td>' +
+                        '<td class="p-3">$' + i.costo.toFixed(2) + '</td>' +
+                        '<td class="p-3 ' + (i.stock <= i.minimo ? 'text-red-600 font-bold' : '') + '">' + i.stock + '</td>' +
+                        '<td class="p-3">' + i.minimo + '</td>' +
+                        '<td class="p-3 text-right space-x-2">' +
+                            '<button onclick="openInsumoModal(\'' + i.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
+                            '<button onclick="eliminarInsumo(\'' + i.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
+                        '</td>' +
+                    '</tr>'
+                ).join('');
             }
 
-            // Servicios
             const tbodyServ = document.getElementById('tablaServiciosBody');
             if(db.servicios.length === 0) {
                 tbodyServ.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>';
             } else {
-                tbodyServ.innerHTML = db.servicios.map(s => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="p-3 font-medium">${s.codigo}</td>
-                        <td class="p-3">${s.nombre}</td>
-                        <td class="p-3 text-right">$${s.precio.toFixed(2)}</td>
-                        <td class="p-3 text-right space-x-2">
-                            <button onclick="openServicioModal('${s.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="eliminarServicio('${s.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbodyServ.innerHTML = db.servicios.map(s => 
+                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+                        '<td class="p-3 font-medium">' + s.codigo + '</td>' +
+                        '<td class="p-3">' + s.nombre + '</td>' +
+                        '<td class="p-3 text-right">$' + s.precio.toFixed(2) + '</td>' +
+                        '<td class="p-3 text-right space-x-2">' +
+                            '<button onclick="openServicioModal(\'' + s.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
+                            '<button onclick="eliminarServicio(\'' + s.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
+                        '</td>' +
+                    '</tr>'
+                ).join('');
             }
 
-            // Clientes
             const tbodyCli = document.getElementById('tablaClientesBody');
             if(db.clientes.length === 0) {
                 tbodyCli.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>';
             } else {
-                tbodyCli.innerHTML = db.clientes.map(c => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="p-3 font-medium">${c.cliId}</td>
-                        <td class="p-3">${c.nombre}</td>
-                        <td class="p-3">${c.tel}</td>
-                        <td class="p-3">${c.ig}</td>
-                        <td class="p-3 text-right space-x-2">
-                            <button onclick="openClienteModal('${c.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="eliminarCliente('${c.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbodyCli.innerHTML = db.clientes.map(c => 
+                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+                        '<td class="p-3 font-medium">' + c.cliId + '</td>' +
+                        '<td class="p-3">' + c.nombre + '</td>' +
+                        '<td class="p-3">' + c.tel + '</td>' +
+                        '<td class="p-3">' + c.ig + '</td>' +
+                        '<td class="p-3 text-right space-x-2">' +
+                            '<button onclick="openClienteModal(\'' + c.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
+                            '<button onclick="eliminarCliente(\'' + c.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
+                        '</td>' +
+                    '</tr>'
+                ).join('');
             }
         }
 
         function renderSelects() {
-            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => `<option value="${c.id}">${c.nombre} (${c.cliId})</option>`).join('');
+            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => '<option value="' + c.id + '">' + c.nombre + ' (' + c.cliId + ')</option>').join('');
             document.getElementById('cotClienteSelect').innerHTML = optCli;
             document.getElementById('factClienteSelect').innerHTML = optCli;
 
-            document.getElementById('cotInsumoSelect').innerHTML = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => `<option value="${i.id}">${i.desc} ($${i.costo})</option>`).join('');
-            document.getElementById('cotServicioSelect').innerHTML = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => `<option value="${s.id}">${s.nombre} ($${s.precio})</option>`).join('');
+            document.getElementById('cotInsumoSelect').innerHTML = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => '<option value="' + i.id + '">' + i.desc + ' ($' + i.costo + ')</option>').join('');
+            document.getElementById('cotServicioSelect').innerHTML = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => '<option value="' + s.id + '">' + s.nombre + ' ($' + s.precio + ')</option>').join('');
         }
 
         function actualizarDashboard() {
             const totalVentas = db.ventas.reduce((acc, v) => acc + v.total, 0);
-            document.getElementById('dashVentas').innerText = `$${totalVentas.toFixed(2)}`;
+            document.getElementById('dashVentas').innerText = '$' + totalVentas.toFixed(2);
             document.getElementById('dashInsumos').innerText = db.insumos.length;
             const alertass = db.insumos.filter(i => i.stock <= i.minimo).length;
             document.getElementById('dashAlerta').innerText = alertass;
             document.getElementById('dashServicios').innerText = db.servicios.length;
         }
 
-        // Inicialización
         renderTablas();
         renderSelects();
         actualizarDashboard();
