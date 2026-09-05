@@ -888,5 +888,266 @@
             if (db.logo) aplicarLogoVisual();
         });
     </script>
-const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+<!-- SDK de Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // Tus credenciales directas
+    const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+    
+    // Forzamos que sea global (window) para que la consola y las funciones lo reconozcan siempre
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let itemsCotizacionActual = [];
+    let serviciosGlobales = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Iniciando sistema LAN Estudio...");
+        cargarDatosGlobales();
+        configurarTiempoReal();
+    });
+
+    function cambiarSeccion(idSeccion) {
+        document.querySelectorAll('.seccion-app').forEach(el => el.classList.add('hidden'));
+        document.getElementById('sec-' + idSeccion).classList.remove('hidden');
+    }
+
+    async function cargarDatosGlobales() {
+        await Promise.all([
+            cargarInsumos(),
+            cargarServicios(),
+            cargarClientes(),
+            cargarLogoConfig()
+        ]);
+    }
+
+    function configurarTiempoReal() {
+        window.supabaseClient.channel('cambios-db')
+            .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+                console.log('Cambio detectado en la nube:', payload);
+                cargarDatosGlobales();
+            })
+            .subscribe();
+    }
+
+    // --- INSUMOS ---
+    async function registrarInsumo() {
+        const nombre = document.getElementById('ins-nombre').value;
+        const categoria = document.getElementById('ins-categoria').value;
+        const costo_unitario = parseFloat(document.getElementById('ins-costo').value) || 0;
+        const stock = parseInt(document.getElementById('ins-stock').value) || 0;
+
+        if (!nombre) return alert('Por favor ingresa el nombre del insumo.');
+
+        const { error } = await window.supabaseClient.from('insumos').insert([{ nombre, categoria, costo_unitario, stock }]);
+        if (error) alert('Error al guardar: ' + error.message);
+        else {
+            alert('¡Insumo registrado con éxito!');
+            document.getElementById('ins-nombre').value = '';
+            document.getElementById('ins-categoria').value = '';
+            document.getElementById('ins-costo').value = '';
+            document.getElementById('ins-stock').value = '';
+            cargarInsumos();
+        }
+    }
+
+    async function cargarInsumos() {
+        const { data, error } = await window.supabaseClient.from('insumos').select('*').order('created_at', { ascending: false });
+        if (error) {
+            console.error("Error cargando insumos:", error);
+            return;
+        }
+        
+        const tbody = document.getElementById('lista-insumos-tabla');
+        document.getElementById('stat-insumos').innerText = data.length;
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-slate-500 py-4">Sin insumos registrados.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(i => `
+            <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
+                <td class="py-3">${i.nombre}</td>
+                <td class="py-3 text-slate-400">${i.categoria || '-'}</td>
+                <td class="py-3">$${i.costo_unitario.toFixed(2)}</td>
+                <td class="py-3">${i.stock}</td>
+            </tr>
+        `).join('');
+    }
+
+    // --- SERVICIOS ---
+    async function registrarServicio() {
+        const nombre = document.getElementById('ser-nombre').value;
+        const precio = parseFloat(document.getElementById('ser-precio').value) || 0;
+
+        if (!nombre) return alert('Ingresa el nombre del servicio.');
+
+        const { error } = await window.supabaseClient.from('servicios').insert([{ nombre, precio }]);
+        if (error) alert('Error: ' + error.message);
+        else {
+            alert('¡Servicio registrado!');
+            document.getElementById('ser-nombre').value = '';
+            document.getElementById('ser-precio').value = '';
+            cargarServicios();
+        }
+    }
+
+    async function cargarServicios() {
+        const { data, error } = await window.supabaseClient.from('servicios').select('*').order('created_at', { ascending: false });
+        if (error) return;
+
+        serviciosGlobales = data;
+        document.getElementById('stat-servicios').innerText = data.length;
+        
+        const tbody = document.getElementById('lista-servicios-tabla');
+        const selectServ = document.getElementById('cot-servicio');
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-slate-500 py-4">Sin servicios registrados.</td></tr>`;
+            selectServ.innerHTML = `<option value="">-- Sin servicios --</option>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(s => `
+            <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
+                <td class="py-3">${s.nombre}</td>
+                <td class="py-3">$${s.precio.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        selectServ.innerHTML = `<option value="">-- Seleccionar Servicio --</option>` + data.map(s => `<option value="${s.id}">${s.nombre} ($${s.precio})</option>`).join('');
+    }
+
+    // --- CLIENTES ---
+    async function registrarCliente() {
+        const nombre = document.getElementById('cli-nombre').value;
+        const empresa = document.getElementById('cli-empresa').value;
+        const telefono = document.getElementById('cli-telefono').value;
+        const email = document.getElementById('cli-email').value;
+
+        if (!nombre) return alert('Ingresa el nombre del cliente.');
+
+        const { error } = await window.supabaseClient.from('clientes').insert([{ nombre, empresa, telefono, email }]);
+        if (error) alert('Error: ' + error.message);
+        else {
+            alert('¡Cliente registrado!');
+            document.getElementById('cli-nombre').value = '';
+            document.getElementById('cli-empresa').value = '';
+            document.getElementById('cli-telefono').value = '';
+            document.getElementById('cli-email').value = '';
+            cargarClientes();
+        }
+    }
+
+    async function cargarClientes() {
+        const { data, error } = await window.supabaseClient.from('clientes').select('*').order('created_at', { ascending: false });
+        if (error) return;
+
+        document.getElementById('stat-clientes').innerText = data.length;
+        const tbody = document.getElementById('lista-clientes-tabla');
+        const selectCli = document.getElementById('cot-cliente');
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-slate-500 py-4">Sin clientes registrados.</td></tr>`;
+            selectCli.innerHTML = `<option value="">-- Sin clientes --</option>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
+                <td class="py-3">${c.nombre}</td>
+                <td class="py-3 text-slate-400">${c.empresa || '-'}</td>
+                <td class="py-3">${c.telefono || '-'}</td>
+                <td class="py-3">${c.email || '-'}</td>
+            </tr>
+        `).join('');
+
+        selectCli.innerHTML = `<option value="">-- Seleccione un cliente --</option>` + data.map(c => `<option value="${c.id}">${c.nombre} (${c.empresa || 'Particular'})</option>`).join('');
+    }
+
+    // --- COTIZADOR ---
+    function agregarItemCotizacion() {
+        const servId = document.getElementById('cot-servicio').value;
+        if (!servId) return;
+        const servicio = serviciosGlobales.find(s => s.id === servId);
+        if (servicio) {
+            itemsCotizacionActual.push(servicio);
+            actualizarTablaCotizacion();
+        }
+        document.getElementById('cot-servicio').value = '';
+    }
+
+    function actualizarTablaCotizacion() {
+        const tbody = document.getElementById('tabla-items-cot');
+        if (itemsCotizacionActual.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-slate-500 py-4">Sin ítems agregados.</td></tr>`;
+            document.getElementById('cot-total').innerText = '$0.00';
+            return;
+        }
+
+        let total = 0;
+        tbody.innerHTML = itemsCotizacionActual.map((item, index) => {
+            total += item.precio;
+            return `
+                <tr class="border-b border-slate-800/40">
+                    <td class="py-2">${item.nombre}</td>
+                    <td class="py-2">$${item.precio.toFixed(2)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('cot-total').innerText = `$${total.toFixed(2)}`;
+    }
+
+    async function guardarCotizacion() {
+        const clienteId = document.getElementById('cot-cliente').value;
+        if (!clienteId || itemsCotizacionActual.length === 0) {
+            alert('Selecciona un cliente y al menos un servicio para cotizar.');
+            return;
+        }
+
+        let total = itemsCotizacionActual.reduce((acc, curr) => acc + curr.precio, 0);
+
+        const { error } = await window.supabaseClient.from('cotizaciones').insert([{
+            cliente_id: clienteId,
+            detalles: itemsCotizacionActual,
+            total_dolares: total
+        }]);
+
+        if (error) alert('Error al guardar cotización: ' + error.message);
+        else {
+            alert('¡Cotización guardada y registrada en la nube!');
+            itemsCotizacionActual = [];
+            actualizarTablaCotizacion();
+            actualizarEstadisticasDashboard();
+        }
+    }
+
+    async function actualizarEstadisticasDashboard() {
+        const { data } = await window.supabaseClient.from('cotizaciones').select('total_dolares');
+        if (data) {
+            let ventasTotal = data.reduce((acc, curr) => acc + (curr.total_dolares || 0), 0);
+            document.getElementById('stat-ventas').innerText = `$${ventasTotal.toFixed(2)}`;
+        }
+    }
+
+    // --- CONFIGURACION LOGO ---
+    async function guardarLogo() {
+        const urlLogo = document.getElementById('cfg-logo-url').value;
+        if (!urlLogo) return;
+
+        await window.supabaseClient.from('configuracion').upsert({ clave: 'logo_url', valor: urlLogo }, { onConflict: 'clave' });
+        alert('¡Logo actualizado!');
+        document.getElementById('logo-preview').src = urlLogo;
+    }
+
+    async function cargarLogoConfig() {
+        const { data } = await window.supabaseClient.from('configuracion').select('*').eq('clave', 'logo_url').single();
+        if (data && data.valor) {
+            document.getElementById('logo-preview').src = data.valor;
+            document.getElementById('cfg-logo-url').value = data.valor;
+        }
+        actualizarEstadisticasDashboard();
+    }
+</script>
