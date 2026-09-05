@@ -209,7 +209,7 @@
         </main>
     </div>
 
-    <!-- Script de Supabase con canales independientes en tiempo real -->
+    <!-- Script de Supabase con WebSockets en Tiempo Real -->
     <script>
         const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
@@ -220,7 +220,7 @@
         let serviciosGlobales = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("Sistema LAN Estudio conectado a Supabase con éxito.");
+            console.log("Sistema LAN Estudio conectado con éxito.");
             cargarDatosGlobales();
             configurarTiempoRealRobusto();
         });
@@ -239,7 +239,7 @@
             ]);
         }
 
-        // Configuración robusta de WebSockets para múltiples dispositivos
+        // Configuración de WebSockets para escuchar cambios globales al instante
         function configurarTiempoRealRobusto() {
             window.supabaseClient
                 .channel('esquema-publico-global')
@@ -466,3 +466,7 @@
                 document.getElementById('cfg-logo-url').value = data.valor;
             }
             actualizarEstadisticasDashboard();
+        }
+    </script>
+</body>
+</html>
