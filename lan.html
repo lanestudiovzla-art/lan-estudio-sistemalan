@@ -1,0 +1,489 @@
+document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
+        }, 1000);
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-600', 'text-white');
+                el.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+            });
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('bg-indigo-600', 'text-white');
+            btn.classList.remove('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+        }
+
+        function actualizarDashboard() {
+            let totalVentas = db.ventas.reduce((acc, v) => acc + v.total, 0);
+            document.getElementById('dashVentas').innerText = '$' + totalVentas.toFixed(2);
+            document.getElementById('dashInsumos').innerText = db.insumos.length;
+            let alertas = db.insumos.filter(i => i.stock <= i.minimo).length;
+            document.getElementById('dashAlerta').innerText = alertas;
+            document.getElementById('dashServicios').innerText = db.servicios.length;
+        }
+
+        // --- Modales y Gestión de Insumos ---
+        function openInsumoModal(id = null) {
+            document.getElementById('insumoModal').classList.remove('hidden');
+            document.getElementById('insumoModal').classList.add('flex');
+            if (id !== null) {
+                let item = db.insumos.find((_, idx) => idx === id);
+                document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
+                document.getElementById('insumoEditId').value = id;
+                document.getElementById('insumoCodigo').value = item.codigo;
+                document.getElementById('insumoDesc').value = item.desc;
+                document.getElementById('insumoCat').value = item.cat;
+                document.getElementById('insumoCosto').value = item.costo;
+                document.getElementById('insumoStock').value = item.stock;
+                document.getElementById('insumoMinimo').value = item.minimo;
+            } else {
+                document.getElementById('insumoModalTitle').innerText = 'Registrar Nuevo Insumo';
+                document.getElementById('insumoEditId').value = '';
+                document.getElementById('insumoCodigo').value = '';
+                document.getElementById('insumoDesc').value = '';
+                document.getElementById('insumoCosto').value = '';
+                document.getElementById('insumoStock').value = '';
+                document.getElementById('insumoMinimo').value = '';
+            }
+        }
+
+        function closeInsumoModal() {
+            document.getElementById('insumoModal').classList.add('hidden');
+            document.getElementById('insumoModal').classList.remove('flex');
+        }
+
+        function guardarInsumo() {
+            let editId = document.getElementById('insumoEditId').value;
+            let obj = {
+                codigo: document.getElementById('insumoCodigo').value || 'INS-000',
+                desc: document.getElementById('insumoDesc').value || 'Sin descripción',
+                cat: document.getElementById('insumoCat').value,
+                costo: parseFloat(document.getElementById('insumoCosto').value) || 0,
+                stock: parseInt(document.getElementById('insumoStock').value) || 0,
+                minimo: parseInt(document.getElementById('insumoMinimo').value) || 0
+            };
+            if (editId === '') {
+                db.insumos.push(obj);
+            } else {
+                db.insumos[parseInt(editId)] = obj;
+            }
+            closeInsumoModal();
+            persistir();
+        }
+
+        function eliminarInsumo(idx) {
+            db.insumos.splice(idx, 1);
+            persistir();
+        }
+
+        // --- Modales y Gestión de Servicios ---
+        function openServicioModal(id = null) {
+            document.getElementById('servicioModal').classList.remove('hidden');
+            document.getElementById('servicioModal').classList.add('flex');
+            if (id !== null) {
+                let item = db.servicios[id];
+                document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
+                document.getElementById('servicioEditId').value = id;
+                document.getElementById('servCodigo').value = item.codigo;
+                document.getElementById('servNombre').value = item.nombre;
+                document.getElementById('servPrecio').value = item.precio;
+            } else {
+                document.getElementById('servicioModalTitle').innerText = 'Registrar Servicio Publicitario';
+                document.getElementById('servicioEditId').value = '';
+                document.getElementById('servCodigo').value = '';
+                document.getElementById('servNombre').value = '';
+                document.getElementById('servPrecio').value = '';
+            }
+        }
+
+        function closeServicioModal() {
+            document.getElementById('servicioModal').classList.add('hidden');
+            document.getElementById('servicioModal').classList.remove('flex');
+        }
+
+        function guardarServicio() {
+            let editId = document.getElementById('servicioEditId').value;
+            let obj = {
+                codigo: document.getElementById('servCodigo').value || 'SRV-000',
+                nombre: document.getElementById('servNombre').value || 'Sin nombre',
+                precio: parseFloat(document.getElementById('servPrecio').value) || 0
+            };
+            if (editId === '') {
+                db.servicios.push(obj);
+            } else {
+                db.servicios[parseInt(editId)] = obj;
+            }
+            closeServicioModal();
+            persistir();
+        }
+
+        function eliminarServicio(idx) {
+            db.servicios.splice(idx, 1);
+            persistir();
+        }
+
+        // --- Modales y Gestión de Clientes (CRM) ---
+        function openClienteModal(id = null) {
+            document.getElementById('clienteModal').classList.remove('hidden');
+            document.getElementById('clienteModal').classList.add('flex');
+            if (id !== null) {
+                let item = db.clientes[id];
+                document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
+                document.getElementById('clienteEditId').value = id;
+                document.getElementById('cliId').value = item.id;
+                document.getElementById('cliNombre').value = item.nombre;
+                document.getElementById('cliTel').value = item.tel;
+                document.getElementById('cliIg').value = item.ig;
+            } else {
+                document.getElementById('clienteModalTitle').innerText = 'Registrar Nuevo Cliente';
+                document.getElementById('clienteEditId').value = '';
+                document.getElementById('cliId').value = '';
+                document.getElementById('cliNombre').value = '';
+                document.getElementById('cliTel').value = '';
+                document.getElementById('cliIg').value = '';
+            }
+        }
+
+        function closeClienteModal() {
+            document.getElementById('clienteModal').classList.add('hidden');
+            document.getElementById('clienteModal').classList.remove('flex');
+        }
+
+        function guardarCliente() {
+            let editId = document.getElementById('clienteEditId').value;
+            let obj = {
+                id: document.getElementById('cliId').value || 'V-00000000',
+                nombre: document.getElementById('cliNombre').value || 'Cliente General',
+                tel: document.getElementById('cliTel').value || '',
+                ig: document.getElementById('cliIg').value || ''
+            };
+            if (editId === '') {
+                db.clientes.push(obj);
+            } else {
+                db.clientes[parseInt(editId)] = obj;
+            }
+            closeClienteModal();
+            persistir();
+        }
+
+        function eliminarCliente(idx) {
+            db.clientes.splice(idx, 1);
+            persistir();
+        }
+
+        // --- Renderizadores de Tablas y Selects ---
+        function renderTablas() {
+            // Tabla Insumos
+            let tInsumos = document.getElementById('tablaInsumosBody');
+            if (db.insumos.length === 0) {
+                tInsumos.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>`;
+            } else {
+                tInsumos.innerHTML = db.insumos.map((i, idx) => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-mono text-xs">${i.codigo}</td>
+                        <td class="p-3 font-medium text-slate-800">${i.desc}</td>
+                        <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs text-slate-600">${i.cat}</span></td>
+                        <td class="p-3">$${i.costo.toFixed(2)}</td>
+                        <td class="p-3"><span class="${i.stock <= i.minimo ? 'text-red-600 font-bold' : ''}">${i.stock}</span></td>
+                        <td class="p-3">${i.minimo}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openInsumoModal(${idx})" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarInsumo(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Tabla Servicios
+            let tServicios = document.getElementById('tablaServiciosBody');
+            if (db.servicios.length === 0) {
+                tServicios.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>`;
+            } else {
+                tServicios.innerHTML = db.servicios.map((s, idx) => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-mono text-xs">${s.codigo}</td>
+                        <td class="p-3 font-medium text-slate-800">${s.nombre}</td>
+                        <td class="p-3 text-right font-semibold text-indigo-600">$${s.precio.toFixed(2)}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openServicioModal(${idx})" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarServicio(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Tabla Clientes (CRM)
+            let tClientes = document.getElementById('tablaClientesBody');
+            if (db.clientes.length === 0) {
+                tClientes.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>`;
+            } else {
+                tClientes.innerHTML = db.clientes.map((c, idx) => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-mono text-xs">${c.id}</td>
+                        <td class="p-3 font-medium text-slate-800">${c.nombre}</td>
+                        <td class="p-3">${c.tel || '---'}</td>
+                        <td class="p-3">${c.ig || '---'}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openClienteModal(${idx})" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarCliente(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function renderSelects() {
+            let optsClientes = `<option value="">-- Seleccionar Cliente --</option>` + db.clientes.map((c, idx) => `<option value="${idx}">${c.nombre} (${c.id})</option>`).join('');
+            document.getElementById('cotClienteSelect').innerHTML = optsClientes;
+            document.getElementById('factClienteSelect').innerHTML = optsClientes;
+
+            let optsInsumos = `<option value="">-- Seleccionar Insumo --</option>` + db.insumos.map((i, idx) => `<option value="ins_${idx}">${i.desc} ($${i.costo.toFixed(2)})</option>`).join('');
+            document.getElementById('cotInsumoSelect').innerHTML = optsInsumos;
+            document.getElementById('factInsumoSelect').innerHTML = optsInsumos;
+
+            let optsServicios = `<option value="">-- Seleccionar Servicio --</option>` + db.servicios.map((s, idx) => `<option value="srv_${idx}">${s.nombre} ($${s.precio.toFixed(2)})</option>`).join('');
+            document.getElementById('cotServicioSelect').innerHTML = optsServicios;
+            document.getElementById('factServicioSelect').innerHTML = optsServicios;
+        }
+
+        // --- Lógica de Cotización / Calculadora ---
+        document.getElementById('cotClienteSelect').addEventListener('change', function() {
+            let idx = this.value;
+            let nombre = idx === '' ? 'No seleccionado' : db.clientes[idx].nombre;
+            document.getElementById('previewClienteNombre').innerText = nombre;
+        });
+
+        document.getElementById('cotProyectoNombre').addEventListener('input', function() {
+            document.getElementById('previewProyectoNombre').innerText = this.value || 'Sin especificar';
+        });
+
+        function agregarInsumoACotizacion() {
+            let val = document.getElementById('cotInsumoSelect').value;
+            let cant = parseInt(document.getElementById('cotInsumoCant').value) || 1;
+            if (!val) return;
+            let idx = parseInt(val.split('_')[1]);
+            let item = db.insumos[idx];
+            cotizacionActualItems.push({
+                tipo: 'insumo',
+                refIndex: idx,
+                nombre: item.desc,
+                cant: cant,
+                unitario: item.costo
+            });
+            renderCotizacionItems();
+        }
+
+        function agregarServicioACotizacion() {
+            let val = document.getElementById('cotServicioSelect').value;
+            let cant = parseInt(document.getElementById('cotServicioCant').value) || 1;
+            if (!val) return;
+            let idx = parseInt(val.split('_')[1]);
+            let item = db.servicios[idx];
+            cotizacionActualItems.push({
+                tipo: 'servicio',
+                refIndex: idx,
+                nombre: item.nombre,
+                cant: cant,
+                unitario: item.precio
+            });
+            renderCotizacionItems();
+        }
+
+        function eliminarItemCotizacion(index) {
+            cotizacionActualItems.splice(index, 1);
+            renderCotizacionItems();
+        }
+
+        function renderCotizacionItems() {
+            let tbody = document.getElementById('cotItemsBody');
+            if (cotizacionActualItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>`;
+                document.getElementById('cotCostoBase').innerText = '$0.00';
+                document.getElementById('cotPrecioEditable').value = '0.00';
+                calcularTotalesCotizacion();
+                return;
+            }
+            let costoBaseTotal = 0;
+            tbody.innerHTML = cotizacionActualItems.map((item, idx) => {
+                let sub = item.cant * item.unitario;
+                costoBaseTotal += sub;
+                return `
+                    <tr class="border-b border-slate-100">
+                        <td class="py-2">${item.nombre}</td>
+                        <td class="py-2 text-center">${item.cant}</td>
+                        <td class="py-2 text-right">$${item.unitario.toFixed(2)}</td>
+                        <td class="py-2 text-right font-medium">$${sub.toFixed(2)}</td>
+                        <td class="py-2 text-right"><button onclick="eliminarItemCotizacion(${idx})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('cotCostoBase').innerText = '$' + costoBaseTotal.toFixed(2);
+            let margen = parseFloat(document.getElementById('cotMargen').value) || 0;
+            let sugerido = costoBaseTotal * (1 + (margen / 100));
+            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
+            calcularTotalesCotizacion();
+        }
+
+        function calcularTotalesCotizacion() {
+            let precioFinal = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
+            let tasa = parseFloat(document.getElementById('bcvRate').value) || 36.50;
+            let totalBs = precioFinal * tasa;
+            document.getElementById('cotTotalBs').innerText = 'Bs. ' + totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        document.getElementById('cotMargen').addEventListener('input', function() {
+            let costoBase = cotizacionActualItems.reduce((acc, i) => acc + (i.cant * i.unitario), 0);
+            let margen = parseFloat(this.value) || 0;
+            let sugerido = costoBase * (1 + (margen / 100));
+            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
+            calcularTotalesCotizacion();
+        });
+
+        document.getElementById('cotPrecioEditable').addEventListener('input', calcularTotalesCotizacion);
+        document.getElementById('bcvRate').addEventListener('input', calcularTotalesCotizacion);
+
+        function enviarCotizacionAFacturacion() {
+            if (cotizacionActualItems.length === 0) return;
+            facturaActualItems = [...cotizacionActualItems];
+            let clienteIdx = document.getElementById('cotClienteSelect').value;
+            document.getElementById('factClienteSelect').value = clienteIdx;
+            renderFacturaItems();
+            switchTab('facturacion', document.querySelectorAll('.tab-btn')[4]);
+        }
+
+        function generarPDFCotizacion() {
+            window.print();
+        }
+
+        // --- Lógica de Facturación y Caja ---
+        function agregarInsumoAFacturacion() {
+            let val = document.getElementById('factInsumoSelect').value;
+            let cant = parseInt(document.getElementById('factInsumoCant').value) || 1;
+            if (!val) return;
+            let idx = parseInt(val.split('_')[1]);
+            let item = db.insumos[idx];
+            facturaActualItems.push({
+                tipo: 'insumo',
+                refIndex: idx,
+                nombre: item.desc,
+                cant: cant,
+                unitario: item.costo
+            });
+            renderFacturaItems();
+        }
+
+        function agregarServicioAFacturacion() {
+            let val = document.getElementById('factServicioSelect').value;
+            let cant = parseInt(document.getElementById('factServicioCant').value) || 1;
+            if (!val) return;
+            let idx = parseInt(val.split('_')[1]);
+            let item = db.servicios[idx];
+            facturaActualItems.push({
+                tipo: 'servicio',
+                refIndex: idx,
+                nombre: item.nombre,
+                cant: cant,
+                unitario: item.precio
+            });
+            renderFacturaItems();
+        }
+
+        function eliminarItemFactura(index) {
+            facturaActualItems.splice(index, 1);
+            renderFacturaItems();
+        }
+
+        function renderFacturaItems() {
+            let tbody = document.getElementById('factItemsBody');
+            if (facturaActualItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>`;
+                document.getElementById('factTotalDolares').innerText = '$0.00';
+                document.getElementById('factTotalBs').innerText = 'Bs. 0.00';
+                return;
+            }
+            let total = 0;
+            tbody.innerHTML = facturaActualItems.map((item, idx) => {
+                let sub = item.cant * item.unitario;
+                total += sub;
+                return `
+                    <tr class="border-b border-slate-100">
+                        <td class="py-2">${item.nombre} (x${item.cant})</td>
+                        <td class="py-2 text-center">${item.cant}</td>
+                        <td class="py-2 text-right font-medium">$${sub.toFixed(2)}</td>
+                        <td class="py-2 text-right"><button onclick="eliminarItemFactura(${idx})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            let tasa = parseFloat(document.getElementById('bcvRate').value) || 36.50;
+            document.getElementById('factTotalDolares').innerText = '$' + total.toFixed(2);
+            document.getElementById('factTotalBs').innerText = 'Bs. ' + (total * tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function procesarFactura() {
+            if (facturaActualItems.length === 0) {
+                alert('El ticket está vacío.');
+                return;
+            }
+            // Descontar inventario de insumos
+            facturaActualItems.forEach(item => {
+                if (item.tipo === 'insumo') {
+                    if (db.insumos[item.refIndex]) {
+                        db.insumos[item.refIndex].stock = Math.max(0, db.insumos[item.refIndex].stock - item.cant);
+                    }
+                }
+            });
+
+            let totalVenta = facturaActualItems.reduce((acc, i) => acc + (i.cant * i.unitario), 0);
+            let metodo = document.querySelector('input[name="metodoPago"]:checked').value;
+            let clienteIdx = document.getElementById('factClienteSelect').value;
+            let clienteNombre = clienteIdx !== '' ? db.clientes[clienteIdx].nombre : 'General';
+
+            db.ventas.push({
+                fecha: new Date().toISOString(),
+                cliente: clienteNombre,
+                total: totalVenta,
+                metodo: metodo,
+                items: [...facturaActualItems]
+            });
+
+            facturaActualItems = [];
+            renderFacturaItems();
+            persistir();
+            alert('¡Venta procesada con éxito e inventario actualizado!');
+        }
+
+        // --- Configuración de Logo ---
+        function guardarLogo() {
+            let fileInput = document.getElementById('logoInput');
+            if (fileInput.files && fileInput.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    db.logo = e.target.result;
+                    persistir();
+                    aplicarLogoVisual();
+                    alert('Logotipo actualizado correctamente.');
+                }
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function aplicarLogoVisual() {
+            let container = document.getElementById('logoContainer');
+            if (db.logo) {
+                container.innerHTML = `<img src="${db.logo}" class="w-full h-full object-cover">`;
+            }
+        }
+
+        // Inicialización al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTablas();
+            renderSelects();
+            actualizarDashboard();
+            if (db.logo) {
+                aplicarLogoVisual();
+            }
+        });
+    </script>
+</body>
+</html>
