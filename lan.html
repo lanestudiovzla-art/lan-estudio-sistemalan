@@ -209,12 +209,11 @@
         </main>
     </div>
 
-    <!-- Script de Supabase con asignación global -->
+    <!-- Script de Supabase con canales independientes en tiempo real -->
     <script>
         const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
         
-        // Creamos la instancia y la hacemos global explícitamente
         window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let itemsCotizacionActual = [];
@@ -223,7 +222,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Sistema LAN Estudio conectado a Supabase con éxito.");
             cargarDatosGlobales();
-            configurarTiempoReal();
+            configurarTiempoRealRobusto();
         });
 
         function cambiarSeccion(idSeccion) {
@@ -240,13 +239,21 @@
             ]);
         }
 
-        function configurarTiempoReal() {
-            window.supabaseClient.channel('cambios-db')
-                .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
-                    console.log('Cambio detectado en tiempo real:', payload);
-                    cargarDatosGlobales();
-                })
-                .subscribe();
+        // Configuración robusta de WebSockets para múltiples dispositivos
+        function configurarTiempoRealRobusto() {
+            window.supabaseClient
+                .channel('esquema-publico-global')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public' },
+                    (payload) => {
+                        console.log('Cambio detectado en tiempo real:', payload);
+                        cargarDatosGlobales();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log("Estado de suscripción Realtime:", status);
+                });
         }
 
         // --- INSUMOS ---
@@ -261,7 +268,6 @@
             const { error } = await window.supabaseClient.from('insumos').insert([{ nombre, categoria, costo_unitario, stock }]);
             if (error) alert('Error al guardar: ' + error.message);
             else {
-                alert('¡Insumo registrado con éxito!');
                 document.getElementById('ins-nombre').value = '';
                 document.getElementById('ins-categoria').value = '';
                 document.getElementById('ins-costo').value = '';
@@ -301,7 +307,6 @@
             const { error } = await window.supabaseClient.from('servicios').insert([{ nombre, precio }]);
             if (error) alert('Error: ' + error.message);
             else {
-                alert('¡Servicio registrado!');
                 document.getElementById('ser-nombre').value = '';
                 document.getElementById('ser-precio').value = '';
                 cargarServicios();
@@ -346,7 +351,6 @@
             const { error } = await window.supabaseClient.from('clientes').insert([{ nombre, empresa, telefono, email }]);
             if (error) alert('Error: ' + error.message);
             else {
-                alert('¡Cliente registrado!');
                 document.getElementById('cli-nombre').value = '';
                 document.getElementById('cli-empresa').value = '';
                 document.getElementById('cli-telefono').value = '';
@@ -432,7 +436,6 @@
 
             if (error) alert('Error al guardar cotización: ' + error.message);
             else {
-                alert('¡Cotización guardada y registrada en la nube!');
                 itemsCotizacionActual = [];
                 actualizarTablaCotizacion();
                 actualizarEstadisticasDashboard();
@@ -453,7 +456,6 @@
             if (!urlLogo) return;
 
             await window.supabaseClient.from('configuracion').upsert({ clave: 'logo_url', valor: urlLogo }, { onConflict: 'clave' });
-            alert('¡Logo actualizado!');
             document.getElementById('logo-preview').src = urlLogo;
         }
 
@@ -464,7 +466,3 @@
                 document.getElementById('cfg-logo-url').value = data.valor;
             }
             actualizarEstadisticasDashboard();
-        }
-    </script>
-</body>
-</html>
