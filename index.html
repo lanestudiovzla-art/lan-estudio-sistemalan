@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN ESTUDIO - Sistema de Gestión y Cotización</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.25; background-color: #f8fafc; color: #1e293b; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div id="logoContainer" class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-xl uppercase tracking-wider overflow-hidden">
+                    LAN
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">LAN ESTUDIO</h1>
+                    <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6 text-sm">
+                <div id="liveClock" class="bg-slate-800 px-3 py-1.5 rounded-md text-slate-300">Cargando fecha...</div>
+                <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-md">
+                    <span class="text-xs text-slate-400">Tasa BCV ($):</span>
+                    <input type="number" id="bcvRate" value="36.50" step="0.01" class="w-20 bg-slate-700 text-white text-right px-2 py-0.5 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-slate-800 border-t border-slate-700 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-4 flex gap-1 py-2 text-sm font-medium whitespace-nowrap">
+                <button onclick="switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-md bg-indigo-600 text-white transition hover:bg-indigo-500"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+                <button onclick="switchTab('insumos')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Materiales</button>
+                <button onclick="switchTab('servicios')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios Publicitarios</button>
+                <button onclick="switchTab('calculadora')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotización</button>
+                <button onclick="switchTab('facturacion')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-cash-register mr-2"></i>Facturación / Caja</button>
+                <button onclick="switchTab('crm')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
+                <button onclick="switchTab('config')" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-gear mr-2"></i>Configurar Logo</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="tab-content active space-y-6">
+            <h2 class="text-2xl font-bold text-slate-800">Panel General - LAN Estudio</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-sm text-slate-500">Ventas Totales</p>
+                    <h3 id="dashVentas" class="text-2xl font-bold text-indigo-600 mt-1">$0.00</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-sm text-slate-500">Insumos Registrados</p>
+                    <h3 id="dashInsumos" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-sm text-slate-500">Insumos en Alerta (Stock Bajo)</p>
+                    <h3 id="dashAlerta" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-sm text-slate-500">Servicios Activos</p>
+                    <h3 id="dashServicios" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- INSUMOS Y MATERIALES -->
+        <section id="insumos" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">Control de Insumos y Materiales</h2>
+                <button onclick="openInsumoModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Insumo</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                            <th class="p-3 font-semibold">Código</th>
+                            <th class="p-3 font-semibold">Descripción del Material</th>
+                            <th class="p-3 font-semibold">Categoría</th>
+                            <th class="p-3 font-semibold">Costo Unit. ($)</th>
+                            <th class="p-3 font-semibold">Stock Actual</th>
+                            <th class="p-3 font-semibold">Stock Mínimo</th>
+                            <th class="p-3 font-semibold text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaInsumosBody" class="divide-y divide-slate-100">
+                        <tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SERVICIOS PUBLICITARIOS -->
+        <section id="servicios" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">Servicios Publicitarios y Diseño Digital</h2>
+                <button onclick="openServicioModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Servicio</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                            <th class="p-3 font-semibold">Código</th>
+                            <th class="p-3 font-semibold">Nombre del Servicio</th>
+                            <th class="p-3 font-semibold text-right">Precio Venta ($)</th>
+                            <th class="p-3 font-semibold text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaServiciosBody" class="divide-y divide-slate-100">
+                        <tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CALCULADORA Y COTIZACIÓN -->
+        <section id="calculadora" class="tab-content space-y-6">
+            <h2 class="text-2xl font-bold text-slate-800">Calculadora y Cotizador de Servicios y Materiales</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Formulario de Configuración de Cotización -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="font-bold text-slate-800 border-b pb-2">1. Datos del Proyecto / Cliente</h3>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Cliente para la Cotización</label>
+                        <select id="cotClienteSelect" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500">
+                            <option value="">-- Seleccionar Cliente --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Descripción del Trabajo</label>
+                        <input type="text" id="cotProyectoNombre" placeholder="Ej. Campaña Publicitaria Redes" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos</h3>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
+                        <div class="flex gap-2">
+                            <select id="cotInsumoSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
+                                <option value="">-- Seleccionar Insumo --</option>
+                            </select>
+                            <input type="number" id="cotInsumoCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
+                            <button onclick="agregarInsumoACotizacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Servicio</label>
+                        <div class="flex gap-2">
+                            <select id="cotServicioSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
+                                <option value="">-- Seleccionar Servicio --</option>
+                            </select>
+                            <input type="number" id="cotServicioCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
+                            <button onclick="agregarServicioACotizacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista Previa Interactiva de Cotización -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b pb-4 mb-4">
+                            <div>
+                                <h3 class="font-bold text-xl text-slate-900">PRESUPUESTO / COTIZACIÓN</h3>
+                                <p class="text-xs text-slate-500">LAN ESTUDIO - Agencia de Publicidad y Comunicación</p>
+                            </div>
+                            <div class="text-right text-xs text-slate-500">
+                                <p id="cotFechaActual">Fecha: --/--/----</p>
+                            </div>
+                        </div>
+
+                        <div id="cotClienteInfo" class="mb-4 text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">
+                            <strong>Cliente:</strong> <span id="previewClienteNombre">No seleccionado</span><br>
+                            <strong>Proyecto:</strong> <span id="previewProyectoNombre">Sin especificar</span>
+                        </div>
+
+                        <!-- Tabla de Items Cotizados -->
+                        <div class="overflow-x-auto mb-4">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="border-b text-slate-600">
+                                        <th class="py-2">Descripción / Ítem</th>
+                                        <th class="py-2 text-center">Cant.</th>
+                                        <th class="py-2 text-right">Precio Unit. ($)</th>
+                                        <th class="py-2 text-right">Subtotal ($)</th>
+                                        <th class="py-2 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cotItemsBody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totales y Precios Sugeridos -->
+                    <div class="border-t pt-4 space-y-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="font-medium text-slate-600">Costo Base Acumulado:</span>
+                            <span id="cotCostoBase" class="font-bold text-slate-800">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <label for="cotMargen" class="font-medium text-slate-600">Margen de Ganancia Deseado (%):</label>
+                            <input type="number" id="cotMargen" value="30" oninput="calcularTotalesCotizacion()" class="w-24 border border-slate-300 rounded-lg p-1 text-right text-sm">
+                        </div>
+                        <div class="flex justify-between items-center text-sm bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                            <span class="font-bold text-indigo-900">Precio Sugerido / Final Editable ($):</span>
+                            <input type="number" id="cotPrecioEditable" value="0.00" step="0.01" class="w-32 border border-indigo-300 rounded-lg p-1.5 text-right font-bold text-indigo-700 text-lg bg-white">
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-slate-500">
+                            <span>Total en Bolívares (Tasa BCV):</span>
+                            <span id="cotTotalBs" class="font-bold">Bs. 0.00</span>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button onclick="enviarCotizacionAFacturacion()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500 transition"><i class="fa-solid fa-cart-shopping mr-2"></i>Enviar a Facturación</button>
+                            <button onclick="generarPDFCotizacion()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-file-pdf mr-2"></i>Exportar Cotización PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FACTURACIÓN / CAJA -->
+        <section id="facturacion" class="tab-content space-y-6">
+            <h2 class="text-2xl font-bold text-slate-800">Facturación y Venta de Servicios / Insumos</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="font-bold text-slate-800 border-b pb-2">1. Seleccionar Cliente</h3>
+                    <select id="factClienteSelect" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                        <option value="">-- Seleccionar Cliente --</option>
+                    </select>
+
+                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Resumen del Ticket</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b text-slate-600">
+                                    <th class="py-2">Descripción</th>
+                                    <th class="py-2 text-center">Cant.</th>
+                                    <th class="py-2 text-right">Subtotal ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="factItemsBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="3" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-800 border-b pb-2">3. Método de Pago y Total</h3>
+                        <div class="flex flex-col gap-2 text-sm">
+                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Divisas (Efectivo / Zelle)" checked> Divisas (Efectivo / Zelle)</label>
+                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Pago Móvil / Punto de Venta"> Pago Móvil / Punto de Venta</label>
+                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Cashea (Financiamiento)"> Cashea (Financiamiento)</label>
+                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Transferencia Bancaria"> Transferencia Bancaria</label>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl space-y-2">
+                            <div class="flex justify-between text-lg font-bold">
+                                <span>Total Dólares:</span>
+                                <span id="factTotalDolares" class="text-indigo-600">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-500">
+                                <span>Total Bolívares (BCV):</span>
+                                <span id="factTotalBs">Bs. 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="procesarFactura()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-500 transition">Procesar Venta y Descargar Insumos</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CRM CLIENTES -->
+        <section id="crm" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">Directorio de Clientes CRM</h2>
+                <button onclick="openClienteModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Cliente</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                            <th class="p-3 font-semibold">ID / RIF</th>
+                            <th class="p-3 font-semibold">Nombre / Empresa</th>
+                            <th class="p-3 font-semibold">Teléfono / WhatsApp</th>
+                            <th class="p-3 font-semibold">Instagram</th>
+                            <th class="p-3 font-semibold text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaClientesBody" class="divide-y divide-slate-100">
+                        <tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CONFIGURAR LOGO -->
+        <section id="config" class="tab-content space-y-6">
+            <h2 class="text-2xl font-bold text-slate-800">Configuración del Logotipo</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-md space-y-4">
+                <label class="block text-sm font-medium text-slate-700">Cargar o Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
+                <input type="file" id="logoInput" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL INSUMO -->
+    <div id="insumoModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 id="insumoModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Insumo</h3>
+            <input type="hidden" id="insumoEditId">
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Código</label>
+                <input type="text" id="insumoCodigo" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. INS-001">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Descripción del Material</label>
+                <input type="text" id="insumoDesc" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Vinil Adhesivo Blanco">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
+                <select id="insumoCat" class="w-full border rounded-lg p-2 text-sm">
+                    <option value="Papelería / Impresión">Papelería / Impresión</option>
+                    <option value="Vinil / Cortes (Cameo 5)">Vinil / Cortes (Cameo 5)</option>
+                    <option value="Tintas y Suministros">Tintas y Suministros</option>
+                    <option value="Empaque / Acabados">Empaque / Acabados</option>
+                    <option value="Digital / Software">Digital / Software</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo Unit. ($)</label>
+                    <input type="number" id="insumoCosto" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Stock Actual</label>
+                    <input type="number" id="insumoStock" class="w-full border rounded-lg p-2 text-sm" placeholder="0">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Stock Mínimo</label>
+                    <input type="number" id="insumoMinimo" class="w-full border rounded-lg p-2 text-sm" placeholder="0">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeInsumoModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <button onclick="guardarInsumo()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Insumo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SERVICIO -->
+    <div id="servicioModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 id="servicioModalTitle" class="text-lg font-bold text-slate-800">Registrar Servicio Publicitario</h3>
+            <input type="hidden" id="servicioEditId">
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Código del Servicio</label>
+                <input type="text" id="servCodigo" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. SRV-001">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nombre del Servicio</label>
+                <input type="text" id="servNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Diseño de Logo Profesional">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Precio de Venta ($)</label>
+                <input type="number" id="servPrecio" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeServicioModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <button onclick="guardarServicio()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Servicio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CLIENTE -->
+    <div id="clienteModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 id="clienteModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Cliente</h3>
+            <input type="hidden" id="clienteEditId">
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">RIF / Cédula / ID</label>
+                <input type="text" id="cliId" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. V-12345678">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Empresa</label>
+                <input type="text" id="cliNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Juan Pérez">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono / WhatsApp</label>
+                <input type="text" id="cliTel" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. +58 412-1234567">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Instagram</label>
+                <input type="text" id="cliIg" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. @cliente">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeClienteModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <button onclick="guardarCliente()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Funcionalidad Integral -->
+    <script>
+        // Estado Global LocalStorage
+        let db = {
+            insumos: JSON.parse(localStorage.getItem('lan_insumos')) || [],
+            servicios: JSON.parse(localStorage.getItem('lan_servicios')) || [],
+            clientes: JSON.parse(localStorage.getItem('lan_clientes')) || [],
+            ventas: JSON.parse(localStorage.getItem('lan_ventas')) || [],
+            logo: localStorage.getItem('lan_logo') || ''
+        };
+
+        let cotizacionActualItems = [];
+        let facturaActualItems = [];
+
+        function persistir() {
+            localStorage.setItem('lan_insumos', JSON.stringify(db.insumos));
+            localStorage.setItem('lan_servicios', JSON.stringify(db.servicios));
+            localStorage.setItem('lan_clientes', JSON.stringify(db.clientes));
+            localStorage.setItem('lan_ventas', JSON.stringify(db.ventas));
+            localStorage.setItem('lan_logo', db.logo);
+            actualizarDashboard();
+            renderTablas();
+            renderSelects();
+        }
+
+        // Reloj y Fecha
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
+        }, 1000);
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-600', 'text-white');
+                el.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+            });
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('bg-indigo-600', 'text-white');
+            event.currentTarget.classList.remove('text-slate-300', 'hover:bg-slate-700');
+        }
+
+        // LOGO
+        if(db.logo) {
+            document.getElementById('logoContainer').innerHTML = `<img src="${db.logo}" class="w-full h-full object-cover">`;
+        }
+        function guardarLogo() {
+            const fileInput = document.getElementById('logoInput');
+            if(fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    db.logo = e.target.result;
+                    document.getElementById('logoContainer').innerHTML = `<img src="${db.logo}" class="w-full h-full object-cover">`;
+                    persistir();
+                    alert('Logo actualizado con éxito.');
+                }
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // INSUMOS CRUD
+        function openInsumoModal(id = null) {
+            document.getElementById('insumoEditId').value = id || '';
+            if(id) {
+                const item = db.insumos.find(i => i.id === id);
+                document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
+                document.getElementById('insumoCodigo').value = item.codigo;
+                document.getElementById('insumoDesc').value = item.desc;
+                document.getElementById('insumoCat').value = item.cat;
+                document.getElementById('insumoCosto').value = item.costo;
+                document.getElementById('insumoStock').value = item.stock;
+                document.getElementById('insumoMinimo').value = item.minimo;
+            } else {
+                document.getElementById('insumoModalTitle').innerText = 'Registrar Nuevo Insumo';
+                document.getElementById('insumoCodigo').value = '';
+                document.getElementById('insumoDesc').value = '';
+                document.getElementById('insumoCosto').value = '';
+                document.getElementById('insumoStock').value = '';
+                document.getElementById('insumoMinimo').value = '';
+            }
+            document.getElementById('insumoModal').classList.remove('hidden');
+            document.getElementById('insumoModal').classList.add('flex');
+        }
+        function closeInsumoModal() {
+            document.getElementById('insumoModal').classList.add('hidden');
+            document.getElementById('insumoModal').classList.remove('flex');
+        }
+        function guardarInsumo() {
+            const id = document.getElementById('insumoEditId').value;
+            const codigo = document.getElementById('insumoCodigo').value;
+            const desc = document.getElementById('insumoDesc').value;
+            const cat = document.getElementById('insumoCat').value;
+            const costo = parseFloat(document.getElementById('insumoCosto').value) || 0;
+            const stock = parseInt(document.getElementById('insumoStock').value) || 0;
+            const minimo = parseInt(document.getElementById('insumoMinimo').value) || 0;
+
+            if(!codigo || !desc) { alert('Complete los campos obligatorios'); return; }
+
+            if(id) {
+                const index = db.insumos.findIndex(i => i.id === id);
+                db.insumos[index] = { id, codigo, desc, cat, costo, stock, minimo };
+            } else {
+                db.insumos.push({ id: Date.now().toString(), codigo, desc, cat, costo, stock, minimo });
+            }
+            closeInsumoModal();
+            persistir();
+        }
+        function eliminarInsumo(id) {
+            if(confirm('¿Eliminar este insumo?')) {
+                db.insumos = db.insumos.filter(i => i.id !== id);
+                persistir();
+            }
+        }
+
+        // SERVICIOS CRUD
+        function openServicioModal(id = null) {
+            document.getElementById('servicioEditId').value = id || '';
+            if(id) {
+                const item = db.servicios.find(s => s.id === id);
+                document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
+                document.getElementById('servCodigo').value = item.codigo;
+                document.getElementById('servNombre').value = item.nombre;
+                document.getElementById('servPrecio').value = item.precio;
+            } else {
+                document.getElementById('servicioModalTitle').innerText = 'Registrar Servicio Publicitario';
+                document.getElementById('servCodigo').value = '';
+                document.getElementById('servNombre').value = '';
+                document.getElementById('servPrecio').value = '';
+            }
+            document.getElementById('servicioModal').classList.remove('hidden');
+            document.getElementById('servicioModal').classList.add('flex');
+        }
+        function closeServicioModal() {
+            document.getElementById('servicioModal').classList.add('hidden');
+            document.getElementById('servicioModal').classList.remove('flex');
+        }
+        function guardarServicio() {
+            const id = document.getElementById('servicioEditId').value;
+            const codigo = document.getElementById('servCodigo').value;
+            const nombre = document.getElementById('servNombre').value;
+            const precio = parseFloat(document.getElementById('servPrecio').value) || 0;
+
+            if(!codigo || !nombre) { alert('Complete los campos obligatorios'); return; }
+
+            if(id) {
+                const index = db.servicios.findIndex(s => s.id === id);
+                db.servicios[index] = { id, codigo, nombre, precio };
+            } else {
+                db.servicios.push({ id: Date.now().toString(), codigo, nombre, precio });
+            }
+            closeServicioModal();
+            persistir();
+        }
+        function eliminarServicio(id) {
+            if(confirm('¿Eliminar este servicio?')) {
+                db.servicios = db.servicios.filter(s => s.id !== id);
+                persistir();
+            }
+        }
+
+        // CLIENTES CRUD
+        function openClienteModal(id = null) {
+            document.getElementById('clienteEditId').value = id || '';
+            if(id) {
+                const item = db.clientes.find(c => c.id === id);
+                document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
+                document.getElementById('cliId').value = item.cliId;
+                document.getElementById('cliNombre').value = item.nombre;
+                document.getElementById('cliTel').value = item.tel;
+                document.getElementById('cliIg').value = item.ig;
+            } else {
+                document.getElementById('clienteModalTitle').innerText = 'Registrar Nuevo Cliente';
+                document.getElementById('cliId').value = '';
+                document.getElementById('cliNombre').value = '';
+                document.getElementById('cliTel').value = '';
+                document.getElementById('cliIg').value = '';
+            }
+            document.getElementById('clienteModal').classList.remove('hidden');
+            document.getElementById('clienteModal').classList.add('flex');
+        }
+        function closeClienteModal() {
+            document.getElementById('clienteModal').classList.add('hidden');
+            document.getElementById('clienteModal').classList.remove('flex');
+        }
+        function guardarCliente() {
+            const id = document.getElementById('clienteEditId').value;
+            const cliId = document.getElementById('cliId').value;
+            const nombre = document.getElementById('cliNombre').value;
+            const tel = document.getElementById('cliTel').value;
+            const ig = document.getElementById('cliIg').value;
+
+            if(!cliId || !nombre) { alert('Complete los campos obligatorios'); return; }
+
+            if(id) {
+                const index = db.clientes.findIndex(c => c.id === id);
+                db.clientes[index] = { id, cliId, nombre, tel, ig };
+            } else {
+                db.clientes.push({ id: Date.now().toString(), cliId, nombre, tel, ig });
+            }
+            closeClienteModal();
+            persistir();
+        }
+        function eliminarCliente(id) {
+            if(confirm('¿Eliminar este cliente?')) {
+                db.clientes = db.clientes.filter(c => c.id !== id);
+                persistir();
+            }
+        }
+
+        // COTIZADOR
+        function agregarInsumoACotizacion() {
+            const id = document.getElementById('cotInsumoSelect').value;
+            const cant = parseInt(document.getElementById('cotInsumoCant').value) || 1;
+            const insumo = db.insumos.find(i => i.id === id);
+            if(!insumo) return;
+
+            cotizacionActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
+            renderCotizacionItems();
+        }
+
+        function agregarServicioACotizacion() {
+            const id = document.getElementById('cotServicioSelect').value;
+            const cant = parseInt(document.getElementById('cotServicioCant').value) || 1;
+            const servicio = db.servicios.find(s => s.id === id);
+            if(!servicio) return;
+
+            cotizacionActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
+            renderCotizacionItems();
+        }
+
+        function quitarItemCotizacion(index) {
+            cotizacionActualItems.splice(index, 1);
+            renderCotizacionItems();
+        }
+
+        function renderCotizacionItems() {
+            const tbody = document.getElementById('cotItemsBody');
+            if(cotizacionActualItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>';
+                document.getElementById('cotCostoBase').innerText = '$0.00';
+                document.getElementById('cotPrecioEditable').value = '0.00';
+                calcularTotalesCotizacion();
+                return;
+            }
+
+            let html = '';
+            let costoBase = 0;
+            cotizacionActualItems.forEach((item, index) => {
+                const subtotal = item.precio * item.cant;
+                costoBase += subtotal;
+                html += `<tr>
+                    <td class="py-2">${item.desc} <span class="text-xs text-indigo-500">(${item.tipo})</span></td>
+                    <td class="py-2 text-center">${item.cant}</td>
+                    <td class="py-2 text-right">$${item.precio.toFixed(2)}</td>
+                    <td class="py-2 text-right font-medium">$${subtotal.toFixed(2)}</td>
+                    <td class="py-2 text-right"><button onclick="quitarItemCotizacion(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('cotCostoBase').innerText = `$${costoBase.toFixed(2)}`;
+            
+            const margen = parseFloat(document.getElementById('cotMargen').value) || 0;
+            const sugerido = costoBase * (1 + margen / 100);
+            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
+            calcularTotalesCotizacion();
+        }
+
+        function calcularTotalesCotizacion() {
+            const totalUSD = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
+            const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
+            const totalBs = totalUSD * tasaBCV;
+            document.getElementById('cotTotalBs').innerText = `Bs. ${totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        document.getElementById('cotPrecioEditable').addEventListener('input', calcularTotalesCotizacion);
+        document.getElementById('bcvRate').addEventListener('input', calcularTotalesCotizacion);
+
+        function enviarCotizacionAFacturacion() {
+            if(cotizacionActualItems.length === 0) { alert('Agregue elementos a la cotización primero.'); return; }
+            const totalUSD = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
+            const proyecto = document.getElementById('cotProyectoNombre').value || 'Cotización General';
+            
+            facturaActualItems = [...cotizacionActualItems];
+            renderFacturacionItems();
+            switchTab('facturacion');
+        }
+
+        function generarPDFCotizacion() {
+            const clienteId = document.getElementById('cotClienteSelect').value;
+            const cliente = db.clientes.find(c => c.id === clienteId);
+            document.getElementById('previewClienteNombre').innerText = cliente ? cliente.nombre : 'Público General';
+            document.getElementById('previewProyectoNombre').innerText = document.getElementById('cotProyectoNombre').value || 'Sin especificar';
+
+            const element = document.getElementById('calculadora');
+            const opt = {
+                margin: 0.5,
+                filename: 'Cotizacion_LAN_Estudio.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().from(element).save();
+        }
+
+        // FACTURACIÓN
+        function renderFacturacionItems() {
+            const tbody = document.getElementById('factItemsBody');
+            if(facturaActualItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>';
+                document.getElementById('factTotalDolares').innerText = '$0.00';
+                document.getElementById('factTotalBs').innerText = 'Bs. 0.00';
+                return;
+            }
+            let html = '';
+            let total = 0;
+            facturaActualItems.forEach(item => {
+                const subtotal = item.precio * item.cant;
+                total += subtotal;
+                html += `<tr>
+                    <td class="py-2">${item.desc}</td>
+                    <td class="py-2 text-center">${item.cant}</td>
+                    <td class="py-2 text-right">$${subtotal.toFixed(2)}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('factTotalDolares').innerText = `$${total.toFixed(2)}`;
+            const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
+            document.getElementById('factTotalBs').innerText = `Bs. ${(total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits: 2})`;
+        }
+
+        function procesarFactura() {
+            if(facturaActualItems.length === 0) { alert('No hay elementos en el ticket de venta.'); return; }
+            const clienteId = document.getElementById('factClienteSelect').value;
+            const cliente = db.clientes.find(c => c.id === clienteId);
+            const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
+            const total = facturaActualItems.reduce((acc, item) => acc + (item.precio * item.cant), 0);
+
+            db.ventas.push({
+                fecha: new Date().toLocaleDateString(),
+                cliente: cliente ? cliente.nombre : 'Público General',
+                metodo,
+                total
+            });
+
+            facturaActualItems = [];
+            renderFacturacionItems();
+            persistir();
+            alert('¡Venta procesada y guardada con éxito!');
+        }
+
+        // RENDERIZADO GENERAL
+        function renderTablas() {
+            // Insumos
+            const tbodyIns = document.getElementById('tablaInsumosBody');
+            if(db.insumos.length === 0) {
+                tbodyIns.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>';
+            } else {
+                tbodyIns.innerHTML = db.insumos.map(i => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-medium">${i.codigo}</td>
+                        <td class="p-3">${i.desc}</td>
+                        <td class="p-3">${i.cat}</td>
+                        <td class="p-3">$${i.costo.toFixed(2)}</td>
+                        <td class="p-3 ${i.stock <= i.minimo ? 'text-red-600 font-bold' : ''}">${i.stock}</td>
+                        <td class="p-3">${i.minimo}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openInsumoModal('${i.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarInsumo('${i.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Servicios
+            const tbodyServ = document.getElementById('tablaServiciosBody');
+            if(db.servicios.length === 0) {
+                tbodyServ.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>';
+            } else {
+                tbodyServ.innerHTML = db.servicios.map(s => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-medium">${s.codigo}</td>
+                        <td class="p-3">${s.nombre}</td>
+                        <td class="p-3 text-right">$${s.precio.toFixed(2)}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openServicioModal('${s.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarServicio('${s.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Clientes
+            const tbodyCli = document.getElementById('tablaClientesBody');
+            if(db.clientes.length === 0) {
+                tbodyCli.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>';
+            } else {
+                tbodyCli.innerHTML = db.clientes.map(c => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 font-medium">${c.cliId}</td>
+                        <td class="p-3">${c.nombre}</td>
+                        <td class="p-3">${c.tel}</td>
+                        <td class="p-3">${c.ig}</td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="openClienteModal('${c.id}')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarCliente('${c.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function renderSelects() {
+            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => `<option value="${c.id}">${c.nombre} (${c.cliId})</option>`).join('');
+            document.getElementById('cotClienteSelect').innerHTML = optCli;
+            document.getElementById('factClienteSelect').innerHTML = optCli;
+
+            document.getElementById('cotInsumoSelect').innerHTML = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => `<option value="${i.id}">${i.desc} ($${i.costo})</option>`).join('');
+            document.getElementById('cotServicioSelect').innerHTML = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => `<option value="${s.id}">${s.nombre} ($${s.precio})</option>`).join('');
+        }
+
+        function actualizarDashboard() {
+            const totalVentas = db.ventas.reduce((acc, v) => acc + v.total, 0);
+            document.getElementById('dashVentas').innerText = `$${totalVentas.toFixed(2)}`;
+            document.getElementById('dashInsumos').innerText = db.insumos.length;
+            const alertass = db.insumos.filter(i => i.stock <= i.minimo).length;
+            document.getElementById('dashAlerta').innerText = alertass;
+            document.getElementById('dashServicios').innerText = db.servicios.length;
+        }
+
+        // Inicialización
+        renderTablas();
+        renderSelects();
+        actualizarDashboard();
+    </script>
+</body>
+</html>
