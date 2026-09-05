@@ -1,15 +1,471 @@
-document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión y Facturación</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar de Navegación -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between hidden md:flex">
+            <div>
+                <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+                    <div id="logoContainer" class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-white tracking-wide">PublicidadApp</h1>
+                        <p class="text-xs text-slate-400">Sistema Integral</p>
+                    </div>
+                </div>
+                <nav class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-indigo-600 text-white transition"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard</button>
+                    <button onclick="switchTab('insumos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-boxes-stacked w-5"></i> Insumos</button>
+                    <button onclick="switchTab('servicios', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-bullhorn w-5"></i> Servicios</button>
+                    <button onclick="switchTab('cotizador', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-calculator w-5"></i> Cotizador</button>
+                    <button onclick="switchTab('facturacion', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-cash-register w-5"></i> Facturación & Caja</button>
+                    <button onclick="switchTab('crm', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-users w-5"></i> CRM Clientes</button>
+                    <button onclick="switchTab('configuracion', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-gear w-5"></i> Configuración</button>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+                v2.5 • Tasa BCV: <input type="number" id="bcvRate" value="36.50" step="0.1" class="w-16 bg-slate-800 text-white text-center rounded px-1 py-0.5 inline-block">
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-xs">
+                <h2 class="text-xl font-bold text-slate-800">Panel de Control</h2>
+                <div class="flex items-center gap-4 text-sm text-slate-600">
+                    <span id="cotFechaActual">Fecha: --/--/----</span>
+                </div>
+            </header>
+
+            <div class="p-6">
+                <!-- VISTA: DASHBOARD -->
+                <div id="dashboard" class="tab-content active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-dollar-sign"></i></div>
+                            <div><p class="text-xs font-semibold text-slate-400 uppercase">Ventas Totales</p><h3 id="dashVentas" class="text-2xl font-bold text-slate-800">$0.00</h3></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <div><p class="text-xs font-semibold text-slate-400 uppercase">Insumos Activos</p><h3 id="dashInsumos" class="text-2xl font-bold text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div><p class="text-xs font-semibold text-slate-400 uppercase">Stock Bajo</p><h3 id="dashAlerta" class="text-2xl font-bold text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div><p class="text-xs font-semibold text-slate-400 uppercase">Servicios</p><h3 id="dashServicios" class="text-2xl font-bold text-slate-800">0</h3></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: INSUMOS -->
+                <div id="insumos" class="tab-content space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-800">Inventario de Insumos</h3>
+                        <button onclick="openInsumoModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Nuevo Insumo
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                                    <th class="p-3 font-semibold">Código</th>
+                                    <th class="p-3 font-semibold">Descripción</th>
+                                    <th class="p-3 font-semibold">Categoría</th>
+                                    <th class="p-3 font-semibold">Costo ($)</th>
+                                    <th class="p-3 font-semibold">Stock</th>
+                                    <th class="p-3 font-semibold">Mínimo</th>
+                                    <th class="p-3 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaInsumosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VISTA: SERVICIOS -->
+                <div id="servicios" class="tab-content space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-800">Servicios Publicitarios</h3>
+                        <button onclick="openServicioModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Nuevo Servicio
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                                    <th class="p-3 font-semibold">Código</th>
+                                    <th class="p-3 font-semibold">Nombre del Servicio</th>
+                                    <th class="p-3 font-semibold text-right">Precio Base ($)</th>
+                                    <th class="p-3 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaServiciosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VISTA: COTIZADOR -->
+                <div id="cotizador" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4">
+                            <h3 class="font-bold text-slate-800 border-b pb-2">Configurar Cotización</h3>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente</label>
+                                <select id="cotClienteSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre del Proyecto</label>
+                                <input type="text" id="cotProyectoNombre" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Ej. Valla Publicitaria Centro">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Añadir Insumo</label>
+                                    <select id="cotInsumoSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-2"></select>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="cotInsumoCant" value="1" min="1" class="w-20 border rounded-lg px-2 py-1 text-sm">
+                                        <button onclick="agregarInsumoACotizacion()" class="flex-1 bg-slate-800 text-white rounded-lg text-xs font-medium py-1">Agregar</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Añadir Servicio</label>
+                                    <select id="cotServicioSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-2"></select>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="cotServicioCant" value="1" min="1" class="w-20 border rounded-lg px-2 py-1 text-sm">
+                                        <button onclick="agregarServicioACotizacion()" class="flex-1 bg-slate-800 text-white rounded-lg text-xs font-medium py-1">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista Previa Cotización -->
+                        <div id="cotizacionPrintArea" class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start border-b pb-4">
+                                    <div>
+                                        <h4 class="font-bold text-lg text-slate-900">COTIZACIÓN</h4>
+                                        <p class="text-xs text-slate-500">Proyecto: <span id="previewProyectoNombre" class="font-semibold">---</span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-slate-500">Cliente:</p>
+                                        <p id="previewClienteNombre" class="text-sm font-semibold text-slate-800">---</p>
+                                    </div>
+                                </div>
+                                <table class="w-full text-left text-sm my-4">
+                                    <thead>
+                                        <tr class="border-b text-xs text-slate-500">
+                                            <th class="py-2">Ítem</th>
+                                            <th class="py-2 text-center">Cant</th>
+                                            <th class="py-2 text-right">Unitario</th>
+                                            <th class="py-2 text-right">Subtotal</th>
+                                            <th class="py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cotItemsBody">
+                                        <tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="border-t pt-4 space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Costo Base Materiales:</span>
+                                    <span id="cotCostoBase" class="font-semibold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-slate-600">Margen de Ganancia (%):</span>
+                                    <input type="number" id="cotMargen" value="30" class="w-20 border rounded px-2 py-1 text-right text-sm">
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-slate-600 font-bold">Precio Final ($):</span>
+                                    <input type="number" id="cotPrecioEditable" value="0.00" step="0.01" class="w-28 border rounded px-2 py-1 text-right font-bold text-indigo-600 text-base">
+                                </div>
+                                <div class="flex justify-between text-base font-bold bg-slate-50 p-2 rounded">
+                                    <span>Total en Bolívares:</span>
+                                    <span id="cotTotalBs" class="text-emerald-600">Bs. 0.00</span>
+                                </div>
+                                <div class="flex gap-2 pt-2">
+                                    <button onclick="enviarCotizacionAFacturacion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium">Enviar a Caja</button>
+                                    <button onclick="generarPDFCotizacion()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium"><i class="fa-solid fa-print"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: FACTURACIÓN & CAJA -->
+                <div id="facturacion" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4">
+                            <h3 class="font-bold text-slate-800 border-b pb-2">Registrar Venta / Factura</h3>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente</label>
+                                <select id="factClienteSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Insumo</label>
+                                    <select id="factInsumoSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-2"></select>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="factInsumoCant" value="1" min="1" class="w-20 border rounded-lg px-2 py-1 text-sm">
+                                        <button onclick="agregarInsumoAFacturacion()" class="flex-1 bg-slate-800 text-white rounded-lg text-xs font-medium py-1">Añadir</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Servicio</label>
+                                    <select id="factServicioSelect" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-2"></select>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="factServicioCant" value="1" min="1" class="w-20 border rounded-lg px-2 py-1 text-sm">
+                                        <button onclick="agregarServicioAFacturacion()" class="flex-1 bg-slate-800 text-white rounded-lg text-xs font-medium py-1">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Método de Pago</label>
+                                <div class="flex gap-4 text-sm pt-1">
+                                    <label><input type="radio" name="metodoPago" value="Efectivo USD" checked> Efectivo USD</label>
+                                    <label><input type="radio" name="metodoPago" value="Pago Móvil"> Pago Móvil</label>
+                                    <label><input type="radio" name="metodoPago" value="Zelle"> Zelle</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Resumen -->
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-900 border-b pb-2">Ticket de Venta</h4>
+                                <table class="w-full text-left text-sm my-4">
+                                    <thead>
+                                        <tr class="border-b text-xs text-slate-500">
+                                            <th class="py-2">Descripción</th>
+                                            <th class="py-2 text-center">Cant</th>
+                                            <th class="py-2 text-right">Subtotal</th>
+                                            <th class="py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="factItemsBody">
+                                        <tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="border-t pt-4 space-y-2">
+                                <div class="flex justify-between text-lg font-bold">
+                                    <span>Total USD:</span>
+                                    <span id="factTotalDolares" class="text-indigo-600">$0.00</span>
+                                </div>
+                                <div class="flex justify-between text-base font-bold bg-slate-50 p-2 rounded">
+                                    <span>Total Bolívares:</span>
+                                    <span id="factTotalBs" class="text-emerald-600">Bs. 0.00</span>
+                                </div>
+                                <button onclick="procesarFactura()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-bold shadow-sm transition mt-2">Procesar Venta y Cobrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: CRM CLIENTES -->
+                <div id="crm" class="tab-content space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-800">Base de Datos de Clientes</h3>
+                        <button onclick="openClienteModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i> Nuevo Cliente
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                                    <th class="p-3 font-semibold">Cédula / RIF</th>
+                                    <th class="p-3 font-semibold">Nombre / Razón Social</th>
+                                    <th class="p-3 font-semibold">Teléfono</th>
+                                    <th class="p-3 font-semibold">Instagram</th>
+                                    <th class="p-3 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaClientesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VISTA: CONFIGURACIÓN -->
+                <div id="configuracion" class="tab-content space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 max-w-xl space-y-4">
+                        <h3 class="font-bold text-slate-800 border-b pb-2">Configuración General</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logotipo de la Empresa</label>
+                            <input type="file" id="logoInput" accept="image/*" class="w-full border border-slate-200 rounded-lg p-2 text-sm">
+                        </div>
+                        <button onclick="guardarLogo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Actualizar Logotipo</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: INSUMOS -->
+    <div id="insumoModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="insumoModalTitle" class="font-bold text-slate-800">Registrar Nuevo Insumo</h3>
+                <button onclick="closeInsumoModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="insumoEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Código</label>
+                    <input type="text" id="insumoCodigo" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Ej. INS-001">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Descripción / Nombre</label>
+                    <input type="text" id="insumoDesc" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Ej. Vinil Adhesivo">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Categoría</label>
+                    <select id="insumoCat" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                        <option value="Materiales">Materiales</option>
+                        <option value="Tintas">Tintas</option>
+                        <option value="Repuestos">Repuestos</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Costo ($)</label>
+                        <input type="number" step="0.01" id="insumoCosto" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Stock</label>
+                        <input type="number" id="insumoStock" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Mínimo</label>
+                        <input type="number" id="insumoMinimo" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeInsumoModal()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                <button onclick="guardarInsumo()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">Guardar Insumo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SERVICIOS -->
+    <div id="servicioModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="servicioModalTitle" class="font-bold text-slate-800">Registrar Servicio</h3>
+                <button onclick="closeServicioModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="servicioEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Código</label>
+                    <input type="text" id="servCodigo" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Ej. SRV-001">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre del Servicio</label>
+                    <input type="text" id="servNombre" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Ej. Diseño Gráfico">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Precio Base ($)</label>
+                    <input type="number" step="0.01" id="servPrecio" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="0.00">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeServicioModal()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                <button onclick="guardarServicio()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">Guardar Servicio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CLIENTES -->
+    <div id="clienteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="clienteModalTitle" class="font-bold text-slate-800">Registrar Cliente</h3>
+                <button onclick="closeClienteModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="clienteEditId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cédula o RIF</label>
+                    <input type="text" id="cliId" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="V-12345678">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre o Razón Social</label>
+                    <input type="text" id="cliNombre" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Nombre del cliente">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Teléfono</label>
+                    <input type="text" id="cliTel" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="0414-0000000">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Instagram</label>
+                    <input type="text" id="cliIg" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="@usuario">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeClienteModal()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                <button onclick="guardarCliente()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">Guardar Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts del Sistema -->
+    <script>
+        let db = JSON.parse(localStorage.getItem('publicidad_db')) || {
+            insumos: [],
+            servicios: [],
+            clientes: [],
+            ventas: [],
+            logo: null
+        };
+
+        let cotizacionActualItems = [];
+        let facturaActualItems = [];
+
+        function persistir() {
+            localStorage.setItem('publicidad_db', JSON.stringify(db));
+            renderTablas();
+            renderSelects();
+            actualizarDashboard();
+        }
+
+        setInterval(() => {
+            let now = new Date();
+            document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
         }, 1000);
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-indigo-600', 'text-white');
-                el.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+                el.classList.add('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
             });
             document.getElementById(tabId).classList.add('active');
-            btn.classList.add('bg-indigo-600', 'text-white');
-            btn.classList.remove('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+            if(btn) {
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+            }
         }
 
         function actualizarDashboard() {
@@ -21,12 +477,12 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             document.getElementById('dashServicios').innerText = db.servicios.length;
         }
 
-        // --- Modales y Gestión de Insumos ---
+        // --- Gestión de Insumos ---
         function openInsumoModal(id = null) {
             document.getElementById('insumoModal').classList.remove('hidden');
             document.getElementById('insumoModal').classList.add('flex');
             if (id !== null) {
-                let item = db.insumos.find((_, idx) => idx === id);
+                let item = db.insumos[id];
                 document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
                 document.getElementById('insumoEditId').value = id;
                 document.getElementById('insumoCodigo').value = item.codigo;
@@ -75,7 +531,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             persistir();
         }
 
-        // --- Modales y Gestión de Servicios ---
+        // --- Gestión de Servicios ---
         function openServicioModal(id = null) {
             document.getElementById('servicioModal').classList.remove('hidden');
             document.getElementById('servicioModal').classList.add('flex');
@@ -121,7 +577,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             persistir();
         }
 
-        // --- Modales y Gestión de Clientes (CRM) ---
+        // --- Gestión de Clientes (CRM) ---
         function openClienteModal(id = null) {
             document.getElementById('clienteModal').classList.remove('hidden');
             document.getElementById('clienteModal').classList.add('flex');
@@ -170,14 +626,11 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             persistir();
         }
 
-        // --- Renderizadores de Tablas y Selects ---
+        // --- Renderizadores ---
         function renderTablas() {
-            // Tabla Insumos
             let tInsumos = document.getElementById('tablaInsumosBody');
-            if (db.insumos.length === 0) {
-                tInsumos.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>`;
-            } else {
-                tInsumos.innerHTML = db.insumos.map((i, idx) => `
+            tInsumos.innerHTML = db.insumos.length === 0 ? `<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>` :
+                db.insumos.map((i, idx) => `
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
                         <td class="p-3 font-mono text-xs">${i.codigo}</td>
                         <td class="p-3 font-medium text-slate-800">${i.desc}</td>
@@ -191,14 +644,10 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
                         </td>
                     </tr>
                 `).join('');
-            }
 
-            // Tabla Servicios
             let tServicios = document.getElementById('tablaServiciosBody');
-            if (db.servicios.length === 0) {
-                tServicios.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>`;
-            } else {
-                tServicios.innerHTML = db.servicios.map((s, idx) => `
+            tServicios.innerHTML = db.servicios.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>` :
+                db.servicios.map((s, idx) => `
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
                         <td class="p-3 font-mono text-xs">${s.codigo}</td>
                         <td class="p-3 font-medium text-slate-800">${s.nombre}</td>
@@ -209,14 +658,10 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
                         </td>
                     </tr>
                 `).join('');
-            }
 
-            // Tabla Clientes (CRM)
             let tClientes = document.getElementById('tablaClientesBody');
-            if (db.clientes.length === 0) {
-                tClientes.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>`;
-            } else {
-                tClientes.innerHTML = db.clientes.map((c, idx) => `
+            tClientes.innerHTML = db.clientes.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>` :
+                db.clientes.map((c, idx) => `
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
                         <td class="p-3 font-mono text-xs">${c.id}</td>
                         <td class="p-3 font-medium text-slate-800">${c.nombre}</td>
@@ -228,7 +673,6 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
                         </td>
                     </tr>
                 `).join('');
-            }
         }
 
         function renderSelects() {
@@ -245,15 +689,14 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             document.getElementById('factServicioSelect').innerHTML = optsServicios;
         }
 
-        // --- Lógica de Cotización / Calculadora ---
+        // --- Cotización ---
         document.getElementById('cotClienteSelect').addEventListener('change', function() {
             let idx = this.value;
-            let nombre = idx === '' ? 'No seleccionado' : db.clientes[idx].nombre;
-            document.getElementById('previewClienteNombre').innerText = nombre;
+            document.getElementById('previewClienteNombre').innerText = idx === '' ? '---' : db.clientes[idx].nombre;
         });
 
         document.getElementById('cotProyectoNombre').addEventListener('input', function() {
-            document.getElementById('previewProyectoNombre').innerText = this.value || 'Sin especificar';
+            document.getElementById('previewProyectoNombre').innerText = this.value || '---';
         });
 
         function agregarInsumoACotizacion() {
@@ -262,13 +705,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             if (!val) return;
             let idx = parseInt(val.split('_')[1]);
             let item = db.insumos[idx];
-            cotizacionActualItems.push({
-                tipo: 'insumo',
-                refIndex: idx,
-                nombre: item.desc,
-                cant: cant,
-                unitario: item.costo
-            });
+            cotizacionActualItems.push({ tipo: 'insumo', refIndex: idx, nombre: item.desc, cant: cant, unitario: item.costo });
             renderCotizacionItems();
         }
 
@@ -278,13 +715,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             if (!val) return;
             let idx = parseInt(val.split('_')[1]);
             let item = db.servicios[idx];
-            cotizacionActualItems.push({
-                tipo: 'servicio',
-                refIndex: idx,
-                nombre: item.nombre,
-                cant: cant,
-                unitario: item.precio
-            });
+            cotizacionActualItems.push({ tipo: 'servicio', refIndex: idx, nombre: item.nombre, cant: cant, unitario: item.precio });
             renderCotizacionItems();
         }
 
@@ -296,7 +727,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
         function renderCotizacionItems() {
             let tbody = document.getElementById('cotItemsBody');
             if (cotizacionActualItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados.</td></tr>`;
                 document.getElementById('cotCostoBase').innerText = '$0.00';
                 document.getElementById('cotPrecioEditable').value = '0.00';
                 calcularTotalesCotizacion();
@@ -319,23 +750,20 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
 
             document.getElementById('cotCostoBase').innerText = '$' + costoBaseTotal.toFixed(2);
             let margen = parseFloat(document.getElementById('cotMargen').value) || 0;
-            let sugerido = costoBaseTotal * (1 + (margen / 100));
-            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
+            document.getElementById('cotPrecioEditable').value = (costoBaseTotal * (1 + (margen / 100))).toFixed(2);
             calcularTotalesCotizacion();
         }
 
         function calcularTotalesCotizacion() {
             let precioFinal = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
             let tasa = parseFloat(document.getElementById('bcvRate').value) || 36.50;
-            let totalBs = precioFinal * tasa;
-            document.getElementById('cotTotalBs').innerText = 'Bs. ' + totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('cotTotalBs').innerText = 'Bs. ' + (precioFinal * tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         document.getElementById('cotMargen').addEventListener('input', function() {
             let costoBase = cotizacionActualItems.reduce((acc, i) => acc + (i.cant * i.unitario), 0);
             let margen = parseFloat(this.value) || 0;
-            let sugerido = costoBase * (1 + (margen / 100));
-            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
+            document.getElementById('cotPrecioEditable').value = (costoBase * (1 + (margen / 100))).toFixed(2);
             calcularTotalesCotizacion();
         });
 
@@ -345,30 +773,21 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
         function enviarCotizacionAFacturacion() {
             if (cotizacionActualItems.length === 0) return;
             facturaActualItems = [...cotizacionActualItems];
-            let clienteIdx = document.getElementById('cotClienteSelect').value;
-            document.getElementById('factClienteSelect').value = clienteIdx;
+            document.getElementById('factClienteSelect').value = document.getElementById('cotClienteSelect').value;
             renderFacturaItems();
             switchTab('facturacion', document.querySelectorAll('.tab-btn')[4]);
         }
 
-        function generarPDFCotizacion() {
-            window.print();
-        }
+        function generarPDFCotizacion() { window.print(); }
 
-        // --- Lógica de Facturación y Caja ---
+        // --- Facturación ---
         function agregarInsumoAFacturacion() {
             let val = document.getElementById('factInsumoSelect').value;
             let cant = parseInt(document.getElementById('factInsumoCant').value) || 1;
             if (!val) return;
             let idx = parseInt(val.split('_')[1]);
             let item = db.insumos[idx];
-            facturaActualItems.push({
-                tipo: 'insumo',
-                refIndex: idx,
-                nombre: item.desc,
-                cant: cant,
-                unitario: item.costo
-            });
+            facturaActualItems.push({ tipo: 'insumo', refIndex: idx, nombre: item.desc, cant: cant, unitario: item.costo });
             renderFacturaItems();
         }
 
@@ -378,13 +797,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             if (!val) return;
             let idx = parseInt(val.split('_')[1]);
             let item = db.servicios[idx];
-            facturaActualItems.push({
-                tipo: 'servicio',
-                refIndex: idx,
-                nombre: item.nombre,
-                cant: cant,
-                unitario: item.precio
-            });
+            facturaActualItems.push({ tipo: 'servicio', refIndex: idx, nombre: item.nombre, cant: cant, unitario: item.precio });
             renderFacturaItems();
         }
 
@@ -407,7 +820,7 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
                 total += sub;
                 return `
                     <tr class="border-b border-slate-100">
-                        <td class="py-2">${item.nombre} (x${item.cant})</td>
+                        <td class="py-2">${item.nombre}</td>
                         <td class="py-2 text-center">${item.cant}</td>
                         <td class="py-2 text-right font-medium">$${sub.toFixed(2)}</td>
                         <td class="py-2 text-right"><button onclick="eliminarItemFactura(${idx})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
@@ -421,27 +834,20 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
         }
 
         function procesarFactura() {
-            if (facturaActualItems.length === 0) {
-                alert('El ticket está vacío.');
-                return;
-            }
-            // Descontar inventario de insumos
+            if (facturaActualItems.length === 0) { alert('El ticket está vacío.'); return; }
             facturaActualItems.forEach(item => {
-                if (item.tipo === 'insumo') {
-                    if (db.insumos[item.refIndex]) {
-                        db.insumos[item.refIndex].stock = Math.max(0, db.insumos[item.refIndex].stock - item.cant);
-                    }
+                if (item.tipo === 'insumo' && db.insumos[item.refIndex]) {
+                    db.insumos[item.refIndex].stock = Math.max(0, db.insumos[item.refIndex].stock - item.cant);
                 }
             });
 
             let totalVenta = facturaActualItems.reduce((acc, i) => acc + (i.cant * i.unitario), 0);
             let metodo = document.querySelector('input[name="metodoPago"]:checked').value;
             let clienteIdx = document.getElementById('factClienteSelect').value;
-            let clienteNombre = clienteIdx !== '' ? db.clientes[clienteIdx].nombre : 'General';
 
             db.ventas.push({
                 fecha: new Date().toISOString(),
-                cliente: clienteNombre,
+                cliente: clienteIdx !== '' ? db.clientes[clienteIdx].nombre : 'General',
                 total: totalVenta,
                 metodo: metodo,
                 items: [...facturaActualItems]
@@ -475,14 +881,11 @@ document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDa
             }
         }
 
-        // Inicialización al cargar la página
         window.addEventListener('DOMContentLoaded', () => {
             renderTablas();
             renderSelects();
             actualizarDashboard();
-            if (db.logo) {
-                aplicarLogoVisual();
-            }
+            if (db.logo) aplicarLogoVisual();
         });
     </script>
 </body>
