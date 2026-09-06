@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Librería oficial de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.25; background-color: #f8fafc; color: #1e293b; }
@@ -130,9 +129,7 @@
         <!-- CALCULADORA Y COTIZACIÓN -->
         <section id="calculadora" class="tab-content space-y-6">
             <h2 class="text-2xl font-bold text-slate-800">Calculadora y Cotizador de Servicios y Materiales</h2>
-            
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Formulario de Configuración de Cotización -->
                 <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h3 class="font-bold text-slate-800 border-b pb-2">1. Datos del Proyecto / Cliente</h3>
                     <div>
@@ -145,7 +142,6 @@
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Descripción del Trabajo</label>
                         <input type="text" id="cotProyectoNombre" placeholder="Ej. Campaña Publicitaria Redes" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500">
                     </div>
-
                     <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos</h3>
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
@@ -169,7 +165,6 @@
                     </div>
                 </div>
 
-                <!-- Vista Previa Interactiva de Cotización -->
                 <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-center border-b pb-4 mb-4">
@@ -181,13 +176,10 @@
                                 <p id="cotFechaActual">Fecha: --/--/----</p>
                             </div>
                         </div>
-
                         <div id="cotClienteInfo" class="mb-4 text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">
                             <strong>Cliente:</strong> <span id="previewClienteNombre">No seleccionado</span><br>
                             <strong>Proyecto:</strong> <span id="previewProyectoNombre">Sin especificar</span>
                         </div>
-
-                        <!-- Tabla de Items Cotizados -->
                         <div class="overflow-x-auto mb-4">
                             <table class="w-full text-left text-sm">
                                 <thead>
@@ -205,8 +197,6 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- Totales y Precios Sugeridos -->
                     <div class="border-t pt-4 space-y-4">
                         <div class="flex justify-between items-center text-sm">
                             <span class="font-medium text-slate-600">Costo Base Acumulado:</span>
@@ -224,7 +214,6 @@
                             <span>Total en Bolívares (Tasa BCV):</span>
                             <span id="cotTotalBs" class="font-bold">Bs. 0.00</span>
                         </div>
-
                         <div class="flex justify-end gap-3 pt-2">
                             <button onclick="enviarCotizacionAFacturacion()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500 transition"><i class="fa-solid fa-cart-shopping mr-2"></i>Enviar a Facturación</button>
                             <button onclick="generarPDFCotizacion()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-file-pdf mr-2"></i>Exportar Cotización PDF</button>
@@ -243,7 +232,6 @@
                     <select id="factClienteSelect" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
                         <option value="">-- Seleccionar Cliente --</option>
                     </select>
-
                     <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos al Ticket</h3>
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
@@ -265,7 +253,6 @@
                             <button onclick="agregarServicioAFacturacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
                         </div>
                     </div>
-
                     <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">Resumen del Ticket</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
@@ -441,7 +428,6 @@
         </div>
     </div>
 
-    <!-- Script con Conexión Real a Supabase -->
     <script>
         // ==========================================
         // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
@@ -462,7 +448,6 @@
         let cotizacionActualItems = [];
         let facturaActualItems = [];
 
-        // Cargar datos desde Supabase al iniciar
         async function cargarDatosRemotos() {
             try {
                 const [resIns, resServ, resCli, resVentas] = await Promise.all([
@@ -527,12 +512,12 @@
             if(id) {
                 const item = db.insumos.find(i => i.id == id);
                 document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
-                document.getElementById('insumoCodigo').value = item.codigo;
-                document.getElementById('insumoDesc').value = item.desc;
-                document.getElementById('insumoCat').value = item.cat;
-                document.getElementById('insumoCosto').value = item.costo;
-                document.getElementById('insumoStock').value = item.stock;
-                document.getElementById('insumoMinimo').value = item.minimo;
+                document.getElementById('insumoCodigo').value = item.codigo || '';
+                document.getElementById('insumoDesc').value = item.descripcion || item.desc || '';
+                document.getElementById('insumoCat').value = item.categoria || item.cat || '';
+                document.getElementById('insumoCosto').value = item.costo_unitario || item.costo || '';
+                document.getElementById('insumoStock').value = item.stock || '';
+                document.getElementById('insumoMinimo').value = item.stock_minimo || item.minimo || '';
             } else {
                 document.getElementById('insumoModalTitle').innerText = 'Registrar Nuevo Insumo';
                 document.getElementById('insumoCodigo').value = '';
@@ -553,18 +538,20 @@
         async function guardarInsumo() {
             const id = document.getElementById('insumoEditId').value;
             const codigo = document.getElementById('insumoCodigo').value;
-            const desc = document.getElementById('insumoDesc').value;
-            const cat = document.getElementById('insumoCat').value;
-            const costo = parseFloat(document.getElementById('insumoCosto').value) || 0;
+            const descripcion = document.getElementById('insumoDesc').value;
+            const categoria = document.getElementById('insumoCat').value;
+            const costo_unitario = parseFloat(document.getElementById('insumoCosto').value) || 0;
             const stock = parseInt(document.getElementById('insumoStock').value) || 0;
-            const minimo = parseInt(document.getElementById('insumoMinimo').value) || 0;
+            const stock_minimo = parseInt(document.getElementById('insumoMinimo').value) || 0;
 
-            if(!codigo || !desc) { alert('Complete los campos obligatorios'); return; }
+            if(!codigo || !descripcion) { alert('Complete los campos obligatorios'); return; }
+
+            const datosGuardar = { codigo, descripcion, categoria, costo_unitario, stock, stock_minimo };
 
             if(id) {
-                await supabaseClient.from('insumos').update({ codigo, desc, cat, costo, stock, minimo }).eq('id', id);
+                await supabaseClient.from('insumos').update(datosGuardar).eq('id', id);
             } else {
-                await supabaseClient.from('insumos').insert([{ codigo, desc, cat, costo, stock, minimo }]);
+                await supabaseClient.from('insumos').insert([datosGuardar]);
             }
             closeInsumoModal();
             cargarDatosRemotos();
@@ -582,9 +569,9 @@
             if(id) {
                 const item = db.servicios.find(s => s.id == id);
                 document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
-                document.getElementById('servCodigo').value = item.codigo;
-                document.getElementById('servNombre').value = item.nombre;
-                document.getElementById('servPrecio').value = item.precio;
+                document.getElementById('servCodigo').value = item.codigo || '';
+                document.getElementById('servNombre').value = item.nombre || '';
+                document.getElementById('servPrecio').value = item.precio || '';
             } else {
                 document.getElementById('servicioModalTitle').innerText = 'Registrar Servicio Publicitario';
                 document.getElementById('servCodigo').value = '';
@@ -608,10 +595,12 @@
 
             if(!codigo || !nombre) { alert('Complete los campos obligatorios'); return; }
 
+            const datosGuardar = { codigo, nombre, precio };
+
             if(id) {
-                await supabaseClient.from('servicios').update({ codigo, nombre, precio }).eq('id', id);
+                await supabaseClient.from('servicios').update(datosGuardar).eq('id', id);
             } else {
-                await supabaseClient.from('servicios').insert([{ codigo, nombre, precio }]);
+                await supabaseClient.from('servicios').insert([datosGuardar]);
             }
             closeServicioModal();
             cargarDatosRemotos();
@@ -629,10 +618,10 @@
             if(id) {
                 const item = db.clientes.find(c => c.id == id);
                 document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
-                document.getElementById('cliId').value = item.cliId;
-                document.getElementById('cliNombre').value = item.nombre;
-                document.getElementById('cliTel').value = item.tel;
-                document.getElementById('cliIg').value = item.ig;
+                document.getElementById('cliId').value = item.cliId || item.cliente_id || '';
+                document.getElementById('cliNombre').value = item.nombre || item.cliente_nombre || '';
+                document.getElementById('cliTel').value = item.tel || item.telefono || '';
+                document.getElementById('cliIg').value = item.ig || item.instagram || '';
             } else {
                 document.getElementById('clienteModalTitle').innerText = 'Registrar Nuevo Cliente';
                 document.getElementById('cliId').value = '';
@@ -658,10 +647,12 @@
 
             if(!cliId || !nombre) { alert('Complete los campos obligatorios'); return; }
 
+            const datosGuardar = { cliId, nombre, tel, ig };
+
             if(id) {
-                await supabaseClient.from('clientes').update({ cliId, nombre, tel, ig }).eq('id', id);
+                await supabaseClient.from('clientes').update(datosGuardar).eq('id', id);
             } else {
-                await supabaseClient.from('clientes').insert([{ cliId, nombre, tel, ig }]);
+                await supabaseClient.from('clientes').insert([datosGuardar]);
             }
             closeClienteModal();
             cargarDatosRemotos();
@@ -680,7 +671,13 @@
             const insumo = db.insumos.find(i => i.id == id);
             if(!insumo) return;
 
-            cotizacionActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
+            cotizacionActualItems.push({ 
+                tipo: 'Insumo', 
+                id: insumo.id, 
+                desc: insumo.descripcion || insumo.desc || '', 
+                precio: insumo.costo_unitario || insumo.costo || 0, 
+                cant 
+            });
             renderCotizacionItems();
         }
 
@@ -690,7 +687,13 @@
             const servicio = db.servicios.find(s => s.id == id);
             if(!servicio) return;
 
-            cotizacionActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
+            cotizacionActualItems.push({ 
+                tipo: 'Servicio', 
+                id: servicio.id, 
+                desc: servicio.nombre || '', 
+                precio: servicio.precio || 0, 
+                cant 
+            });
             renderCotizacionItems();
         }
 
@@ -751,7 +754,7 @@
         function generarPDFCotizacion() {
             const clienteId = document.getElementById('cotClienteSelect').value;
             const cliente = db.clientes.find(c => c.id == clienteId);
-            document.getElementById('previewClienteNombre').innerText = cliente ? cliente.nombre : 'Público General';
+            document.getElementById('previewClienteNombre').innerText = cliente ? (cliente.nombre || cliente.cliente_nombre) : 'Público General';
             document.getElementById('previewProyectoNombre').innerText = document.getElementById('cotProyectoNombre').value || 'Sin especificar';
 
             const element = document.getElementById('calculadora');
@@ -771,7 +774,13 @@
             const insumo = db.insumos.find(i => i.id == id);
             if(!insumo) return;
 
-            facturaActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
+            facturaActualItems.push({ 
+                tipo: 'Insumo', 
+                id: insumo.id, 
+                desc: insumo.descripcion || insumo.desc || '', 
+                precio: insumo.costo_unitario || insumo.costo || 0, 
+                cant 
+            });
             renderFacturacionItems();
         }
 
@@ -781,7 +790,13 @@
             const servicio = db.servicios.find(s => s.id == id);
             if(!servicio) return;
 
-            facturaActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
+            facturaActualItems.push({ 
+                tipo: 'Servicio', 
+                id: servicio.id, 
+                desc: servicio.nombre || '', 
+                precio: servicio.precio || 0, 
+                cant 
+            });
             renderFacturacionItems();
         }
 
@@ -823,21 +838,20 @@
             const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
             const total = facturaActualItems.reduce((acc, item) => acc + (item.precio * item.cant), 0);
 
-            // Descontar inventario en Supabase
             for(const item of facturaActualItems) {
                 if(item.tipo === 'Insumo') {
                     const ins = db.insumos.find(i => i.id == item.id);
                     if(ins) {
-                        const nuevoStock = Math.max(0, ins.stock - item.cant);
+                        const stockActual = parseInt(ins.stock) || 0;
+                        const nuevoStock = Math.max(0, stockActual - item.cant);
                         await supabaseClient.from('insumos').update({ stock: nuevoStock }).eq('id', ins.id);
                     }
                 }
             }
 
-            // Registrar venta
             await supabaseClient.from('ventas').insert([{
                 fecha: new Date().toLocaleDateString(),
-                cliente: cliente ? cliente.nombre : 'Público General',
+                cliente: cliente ? (cliente.nombre || cliente.cliente_nombre) : 'Público General',
                 metodo,
                 total
             }]);
@@ -853,20 +867,25 @@
             if(db.insumos.length === 0) {
                 tbodyIns.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>';
             } else {
-                tbodyIns.innerHTML = db.insumos.map(i => 
-                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + i.codigo + '</td>' +
-                        '<td class="p-3">' + i.desc + '</td>' +
-                        '<td class="p-3">' + i.cat + '</td>' +
-                        '<td class="p-3">$' + parseFloat(i.costo).toFixed(2) + '</td>' +
-                        '<td class="p-3 ' + (i.stock <= i.minimo ? 'text-red-600 font-bold' : '') + '">' + i.stock + '</td>' +
-                        '<td class="p-3">' + i.minimo + '</td>' +
+                tbodyIns.innerHTML = db.insumos.map(i => {
+                    const desc = i.descripcion || i.desc || '';
+                    const cat = i.categoria || i.cat || '';
+                    const costo = parseFloat(i.costo_unitario || i.costo || 0);
+                    const stock = parseInt(i.stock || 0);
+                    const minimo = parseInt(i.stock_minimo || i.minimo || 0);
+                    return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+                        '<td class="p-3 font-medium">' + (i.codigo || '') + '</td>' +
+                        '<td class="p-3">' + desc + '</td>' +
+                        '<td class="p-3">' + cat + '</td>' +
+                        '<td class="p-3">$' + costo.toFixed(2) + '</td>' +
+                        '<td class="p-3 ' + (stock <= minimo ? 'text-red-600 font-bold' : '') + '">' + stock + '</td>' +
+                        '<td class="p-3">' + minimo + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openInsumoModal(\'' + i.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
                             '<button onclick="eliminarInsumo(\'' + i.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
                         '</td>' +
-                    '</tr>'
-                ).join('');
+                    '</tr>';
+                }).join('');
             }
 
             const tbodyServ = document.getElementById('tablaServiciosBody');
@@ -875,9 +894,9 @@
             } else {
                 tbodyServ.innerHTML = db.servicios.map(s => 
                     '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + s.codigo + '</td>' +
-                        '<td class="p-3">' + s.nombre + '</td>' +
-                        '<td class="p-3 text-right">$' + parseFloat(s.precio).toFixed(2) + '</td>' +
+                        '<td class="p-3 font-medium">' + (s.codigo || '') + '</td>' +
+                        '<td class="p-3">' + (s.nombre || '') + '</td>' +
+                        '<td class="p-3 text-right">$' + parseFloat(s.precio || 0).toFixed(2) + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openServicioModal(\'' + s.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
                             '<button onclick="eliminarServicio(\'' + s.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
@@ -890,31 +909,47 @@
             if(db.clientes.length === 0) {
                 tbodyCli.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>';
             } else {
-                tbodyCli.innerHTML = db.clientes.map(c => 
-                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + c.cliId + '</td>' +
-                        '<td class="p-3">' + c.nombre + '</td>' +
-                        '<td class="p-3">' + c.tel + '</td>' +
-                        '<td class="p-3">' + c.ig + '</td>' +
+                tbodyCli.innerHTML = db.clientes.map(c => {
+                    const cliId = c.cliId || c.cliente_id || '';
+                    const nombre = c.nombre || c.cliente_nombre || '';
+                    const tel = c.tel || c.telefono || '';
+                    const ig = c.ig || c.instagram || '';
+                    return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+                        '<td class="p-3 font-medium">' + cliId + '</td>' +
+                        '<td class="p-3">' + nombre + '</td>' +
+                        '<td class="p-3">' + tel + '</td>' +
+                        '<td class="p-3">' + ig + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openClienteModal(\'' + c.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
                             '<button onclick="eliminarCliente(\'' + c.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
                         '</td>' +
-                    '</tr>'
-                ).join('');
+                    '</tr>';
+                }).join('');
             }
         }
 
         function renderSelects() {
-            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => '<option value="' + c.id + '">' + c.nombre + ' (' + c.cliId + ')</option>').join('');
+            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => {
+                const nombre = c.nombre || c.cliente_nombre || '';
+                const cliId = c.cliId || c.cliente_id || '';
+                return '<option value="' + c.id + '">' + nombre + ' (' + cliId + ')</option>';
+            }).join('');
             document.getElementById('cotClienteSelect').innerHTML = optCli;
             document.getElementById('factClienteSelect').innerHTML = optCli;
 
-            const optIns = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => '<option value="' + i.id + '">' + i.desc + ' ($' + i.costo + ')</option>').join('');
+            const optIns = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => {
+                const desc = i.descripcion || i.desc || '';
+                const costo = i.costo_unitario || i.costo || 0;
+                return '<option value="' + i.id + '">' + desc + ' ($' + costo + ')</option>';
+            }).join('');
             document.getElementById('cotInsumoSelect').innerHTML = optIns;
             document.getElementById('factInsumoSelect').innerHTML = optIns;
 
-            const optServ = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => '<option value="' + s.id + '">' + s.nombre + ' ($' + s.precio + ')</option>').join('');
+            const optServ = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => {
+                const nombre = s.nombre || '';
+                const precio = s.precio || 0;
+                return '<option value="' + s.id + '">' + nombre + ' ($' + precio + ')</option>';
+            }).join('');
             document.getElementById('cotServicioSelect').innerHTML = optServ;
             document.getElementById('factServicioSelect').innerHTML = optServ;
         }
@@ -923,12 +958,15 @@
             const totalVentas = db.ventas.reduce((acc, v) => acc + parseFloat(v.total || 0), 0);
             document.getElementById('dashVentas').innerText = '$' + totalVentas.toFixed(2);
             document.getElementById('dashInsumos').innerText = db.insumos.length;
-            const alertass = db.insumos.filter(i => i.stock <= i.minimo).length;
+            const alertass = db.insumos.filter(i => {
+                const stock = parseInt(i.stock || 0);
+                const minimo = parseInt(i.stock_minimo || i.minimo || 0);
+                return stock <= minimo;
+            }).length;
             document.getElementById('dashAlerta').innerText = alertass;
             document.getElementById('dashServicios').innerText = db.servicios.length;
         }
 
-        // Inicializar carga de datos remotos
         cargarDatosRemotos();
     </script>
 </body>
