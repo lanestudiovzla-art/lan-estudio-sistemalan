@@ -484,25 +484,25 @@ let facturaActualItems = [];
             }
         }
 
-        async function guardarLogo() {
-            const fileInput = document.getElementById('logoInput');
-            if(fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const base64Logo = e.target.result;
-                    db.logo = base64Logo;
-                    document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
-                    
-                    // Guardar en Supabase para que se sincronice en todos los equipos
-                    await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
-                    
-                    alert('Logo actualizado en la nube y sincronizado en todos los dispositivos.');
-                }
-                reader.readAsDataURL(fileInput.files[0]);
-            }
-        }
+      async function guardarLogo() {
+    const fileInput = document.getElementById('logoInput');
+    if(fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Logo = e.target.result;
+            db.logo = base64Logo;
+            document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
 
-        function openInsumoModal(id = null) {
+            // Guardar en Supabase para que se sincronice en todos los equipos
+            await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
+
+            alert('Logo actualizado en la nube y sincronizado en todos los dispositivos.');
+            location.reload();
+        }
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+}       
+ function openInsumoModal(id = null) {
             document.getElementById('insumoEditId').value = id || '';
             if(id) {
                 const item = db.insumos.find(i => i.id == id);
