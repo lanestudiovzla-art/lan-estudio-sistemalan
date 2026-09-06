@@ -423,21 +423,20 @@
         // ==========================================
         // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
         // ==========================================
-        const SUPABASE_URL = 'https://sb_publishable_lM5EB6PWxCmo-3frEG2XpA_NxPWAmTb';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+     const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let db = {
-            insumos: [],
-            servicios: [],
-            clientes: [],
-            ventas: [],
-            logo: ''
-        };
+let db = {
+    insumos: [],
+    servicios: [],
+    clientes: [],
+    ventas: [],
+    logo: ''
+};
 
-        let cotizacionActualItems = [];
-        let facturaActualItems = [];
-
+let cotizacionActualItems = [];
+let facturaActualItems = [];
         async function cargarDatosRemotos() {
             try {
                 const [resIns, resServ, resCli, resVentas, resConfig] = await Promise.all([
