@@ -484,7 +484,7 @@ let facturaActualItems = [];
             }
         }
 
-      async function guardarLogo() {
+   async function guardarLogo() {
     const fileInput = document.getElementById('logoInput');
     if(fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
@@ -497,7 +497,11 @@ let facturaActualItems = [];
             await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
 
             alert('Logo actualizado en la nube y sincronizado en todos los dispositivos.');
-            location.reload();
+            
+            // Pausa de 1.5 segundos para asegurar que Supabase guarde antes de recargar
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         }
         reader.readAsDataURL(fileInput.files[0]);
     }
