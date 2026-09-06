@@ -484,7 +484,7 @@ let facturaActualItems = [];
             }
         }
 
-   async function guardarLogo() {
+  async function guardarLogo() {
     const fileInput = document.getElementById('logoInput');
     if(fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
@@ -493,20 +493,25 @@ let facturaActualItems = [];
             db.logo = base64Logo;
             document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
 
-            // Guardar en Supabase para que se sincronice en todos los equipos
-            await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
+            try {
+                // Guardar en Supabase y esperar la confirmación real de la base de datos
+                const { error } = await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
+                
+                if (error) throw error;
 
-            alert('Logo actualizado en la nube y sincronizado en todos los dispositivos.');
-            
-            // Pausa de 1.5 segundos para asegurar que Supabase guarde antes de recargar
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+                // Pequeña pausa para asegurar que el servidor procese el cambio antes de refrescar
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+
+            } catch (err) {
+                console.error('Error al guardar el logo:', err);
+                alert('Hubo un error al guardar el logo en la nube.');
+            }
         }
         reader.readAsDataURL(fileInput.files[0]);
     }
-}       
- function openInsumoModal(id = null) {
+} function openInsumoModal(id = null) {
             document.getElementById('insumoEditId').value = id || '';
             if(id) {
                 const item = db.insumos.find(i => i.id == id);
