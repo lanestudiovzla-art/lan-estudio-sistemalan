@@ -484,30 +484,35 @@ let facturaActualItems = [];
             }
         }
 
-  async function guardarLogo() {
+ async function guardarLogo() {
     const fileInput = document.getElementById('logoInput');
     if(fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
         reader.onload = async function(e) {
             const base64Logo = e.target.result;
+            
+            // Forzar el upsert indicando la columna clave
+            const { error } = await supabaseClient
+                .from('configuracion')
+                .upsert(
+                    { id: 1, clave: 'logo', valor: base64Logo },
+                    { onConflict: 'clave' }
+                );
+
+            if (error) {
+                console.error("Error al guardar:", error);
+                alert("Error de base de datos: " + error.message);
+                return;
+            }
+
             db.logo = base64Logo;
             document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
 
-            try {
-                // Guardar en Supabase y esperar la confirmación real de la base de datos
-                const { error } = await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
-                
-                if (error) throw error;
-
-                // Pequeña pausa para asegurar que el servidor procese el cambio antes de refrescar
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-
-            } catch (err) {
-                console.error('Error al guardar el logo:', err);
-                alert('Hubo un error al guardar el logo en la nube.');
-            }
+            alert('¡Logo guardado con éxito!');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         }
         reader.readAsDataURL(fileInput.files[0]);
     }
