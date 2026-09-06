@@ -87,10 +87,10 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">Código</th>
-                            <th class="p-3 font-semibold">Descripción del Material</th>
                             <th class="p-3 font-semibold">Categoría</th>
+                            <th class="p-3 font-semibold">Costo ($)</th>
                             <th class="p-3 font-semibold">Costo Unit. ($)</th>
+                            <th class="p-3 font-semibold">Precio ($)</th>
                             <th class="p-3 font-semibold">Stock Actual</th>
                             <th class="p-3 font-semibold">Stock Mínimo</th>
                             <th class="p-3 font-semibold text-right">Acciones</th>
@@ -113,14 +113,13 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">Código</th>
                             <th class="p-3 font-semibold">Nombre del Servicio</th>
                             <th class="p-3 font-semibold text-right">Precio Venta ($)</th>
                             <th class="p-3 font-semibold text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaServiciosBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="4" class="p-4 text-center text-slate-400">Cargando servicios...</td></tr>
+                        <tr><td colspan="3" class="p-4 text-center text-slate-400">Cargando servicios...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -306,9 +305,9 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">ID / RIF</th>
+                            <th class="p-3 font-semibold">Cédula / RIF</th>
                             <th class="p-3 font-semibold">Nombre / Empresa</th>
-                            <th class="p-3 font-semibold">Teléfono / WhatsApp</th>
+                            <th class="p-3 font-semibold">Teléfono</th>
                             <th class="p-3 font-semibold">Instagram</th>
                             <th class="p-3 font-semibold text-right">Acciones</th>
                         </tr>
@@ -338,27 +337,23 @@
             <h3 id="insumoModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Insumo</h3>
             <input type="hidden" id="insumoEditId">
             <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Código</label>
-                <input type="text" id="insumoCodigo" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. INS-001">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Descripción del Material</label>
-                <input type="text" id="insumoDesc" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Vinil Adhesivo Blanco">
-            </div>
-            <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
-                <select id="insumoCat" class="w-full border rounded-lg p-2 text-sm">
-                    <option value="Papelería / Impresión">Papelería / Impresión</option>
-                    <option value="Vinil / Cortes (Cameo 5)">Vinil / Cortes (Cameo 5)</option>
-                    <option value="Tintas y Suministros">Tintas y Suministros</option>
-                    <option value="Empaque / Acabados">Empaque / Acabados</option>
-                    <option value="Digital / Software">Digital / Software</option>
-                </select>
+                <input type="text" id="insumoCat" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Papelería">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo ($)</label>
+                    <input type="number" id="insumoCosto" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo Unitario ($)</label>
+                    <input type="number" id="insumoCostoUnitario" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
+                </div>
             </div>
             <div class="grid grid-cols-3 gap-2">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo Unit. ($)</label>
-                    <input type="number" id="insumoCosto" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Precio ($)</label>
+                    <input type="number" id="insumoPrecio" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Stock Actual</label>
@@ -382,12 +377,8 @@
             <h3 id="servicioModalTitle" class="text-lg font-bold text-slate-800">Registrar Servicio Publicitario</h3>
             <input type="hidden" id="servicioEditId">
             <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Código del Servicio</label>
-                <input type="text" id="servCodigo" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. SRV-001">
-            </div>
-            <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Nombre del Servicio</label>
-                <input type="text" id="servNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Diseño de Logo Profesional">
+                <input type="text" id="servNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Diseño de Logo">
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Precio de Venta ($)</label>
@@ -406,20 +397,20 @@
             <h3 id="clienteModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Cliente</h3>
             <input type="hidden" id="clienteEditId">
             <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">RIF / Cédula / ID</label>
-                <input type="text" id="cliId" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. V-12345678">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Cédula o RIF</label>
+                <input type="text" id="cliCedula" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. V-18799431">
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Empresa</label>
-                <input type="text" id="cliNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Juan Pérez">
+                <input type="text" id="cliNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. LEILA HATEM">
             </div>
             <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono / WhatsApp</label>
-                <input type="text" id="cliTel" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. +58 412-1234567">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono</label>
+                <input type="text" id="cliTel" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. 04127618783">
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Instagram</label>
-                <input type="text" id="cliIg" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. @cliente">
+                <input type="text" id="cliInstagram" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. @leilahatem">
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeClienteModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
@@ -432,8 +423,8 @@
         // ==========================================
         // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
         // ==========================================
-        const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co/rest/v1/';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+        const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_lM5EB6PWxCmo-3frEG2XpA_NxPWAmTb';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -512,17 +503,18 @@
             if(id) {
                 const item = db.insumos.find(i => i.id == id);
                 document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
-                document.getElementById('insumoCodigo').value = item.codigo || '';
-                document.getElementById('insumoDesc').value = item.descripcion || item.desc || '';
-                document.getElementById('insumoCat').value = item.categoria || item.cat || '';
-                document.getElementById('insumoCosto').value = item.costo_unitario || item.costo || '';
+                document.getElementById('insumoCat').value = item.categoria || '';
+                document.getElementById('insumoCosto').value = item.costo || '';
+                document.getElementById('insumoCostoUnitario').value = item.costo_unitario || '';
+                document.getElementById('insumoPrecio').value = item.precio || '';
                 document.getElementById('insumoStock').value = item.stock || '';
-                document.getElementById('insumoMinimo').value = item.stock_minimo || item.minimo || '';
+                document.getElementById('insumoMinimo').value = item.stock_minimo || '';
             } else {
                 document.getElementById('insumoModalTitle').innerText = 'Registrar Nuevo Insumo';
-                document.getElementById('insumoCodigo').value = '';
-                document.getElementById('insumoDesc').value = '';
+                document.getElementById('insumoCat').value = '';
                 document.getElementById('insumoCosto').value = '';
+                document.getElementById('insumoCostoUnitario').value = '';
+                document.getElementById('insumoPrecio').value = '';
                 document.getElementById('insumoStock').value = '';
                 document.getElementById('insumoMinimo').value = '';
             }
@@ -537,16 +529,14 @@
 
         async function guardarInsumo() {
             const id = document.getElementById('insumoEditId').value;
-            const codigo = document.getElementById('insumoCodigo').value;
-            const descripcion = document.getElementById('insumoDesc').value;
             const categoria = document.getElementById('insumoCat').value;
-            const costo_unitario = parseFloat(document.getElementById('insumoCosto').value) || 0;
+            const costo = parseFloat(document.getElementById('insumoCosto').value) || 0;
+            const costo_unitario = parseFloat(document.getElementById('insumoCostoUnitario').value) || 0;
+            const precio = parseFloat(document.getElementById('insumoPrecio').value) || 0;
             const stock = parseInt(document.getElementById('insumoStock').value) || 0;
             const stock_minimo = parseInt(document.getElementById('insumoMinimo').value) || 0;
 
-            if(!codigo || !descripcion) { alert('Complete los campos obligatorios'); return; }
-
-            const datosGuardar = { codigo, descripcion, categoria, costo_unitario, stock, stock_minimo };
+            const datosGuardar = { categoria, costo, costo_unitario, precio, stock, stock_minimo };
 
             if(id) {
                 await supabaseClient.from('insumos').update(datosGuardar).eq('id', id);
@@ -569,12 +559,10 @@
             if(id) {
                 const item = db.servicios.find(s => s.id == id);
                 document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
-                document.getElementById('servCodigo').value = item.codigo || '';
                 document.getElementById('servNombre').value = item.nombre || '';
                 document.getElementById('servPrecio').value = item.precio || '';
             } else {
                 document.getElementById('servicioModalTitle').innerText = 'Registrar Servicio Publicitario';
-                document.getElementById('servCodigo').value = '';
                 document.getElementById('servNombre').value = '';
                 document.getElementById('servPrecio').value = '';
             }
@@ -589,13 +577,12 @@
 
         async function guardarServicio() {
             const id = document.getElementById('servicioEditId').value;
-            const codigo = document.getElementById('servCodigo').value;
             const nombre = document.getElementById('servNombre').value;
             const precio = parseFloat(document.getElementById('servPrecio').value) || 0;
 
-            if(!codigo || !nombre) { alert('Complete los campos obligatorios'); return; }
+            if(!nombre) { alert('Complete el nombre del servicio'); return; }
 
-            const datosGuardar = { codigo, nombre, precio };
+            const datosGuardar = { nombre, precio };
 
             if(id) {
                 await supabaseClient.from('servicios').update(datosGuardar).eq('id', id);
@@ -618,16 +605,16 @@
             if(id) {
                 const item = db.clientes.find(c => c.id == id);
                 document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
-                document.getElementById('cliId').value = item.cliId || item.cliente_id || '';
-                document.getElementById('cliNombre').value = item.nombre || item.cliente_nombre || '';
-                document.getElementById('cliTel').value = item.tel || item.telefono || '';
-                document.getElementById('cliIg').value = item.ig || item.instagram || '';
+                document.getElementById('cliCedula').value = item.cedula || '';
+                document.getElementById('cliNombre').value = item.nombre || '';
+                document.getElementById('cliTel').value = item.tel || '';
+                document.getElementById('cliInstagram').value = item.instagram || '';
             } else {
                 document.getElementById('clienteModalTitle').innerText = 'Registrar Nuevo Cliente';
-                document.getElementById('cliId').value = '';
+                document.getElementById('cliCedula').value = '';
                 document.getElementById('cliNombre').value = '';
                 document.getElementById('cliTel').value = '';
-                document.getElementById('cliIg').value = '';
+                document.getElementById('cliInstagram').value = '';
             }
             document.getElementById('clienteModal').classList.remove('hidden');
             document.getElementById('clienteModal').classList.add('flex');
@@ -640,14 +627,14 @@
 
         async function guardarCliente() {
             const id = document.getElementById('clienteEditId').value;
-            const cliId = document.getElementById('cliId').value;
+            const cedula = document.getElementById('cliCedula').value;
             const nombre = document.getElementById('cliNombre').value;
             const tel = document.getElementById('cliTel').value;
-            const ig = document.getElementById('cliIg').value;
+            const instagram = document.getElementById('cliInstagram').value;
 
-            if(!cliId || !nombre) { alert('Complete los campos obligatorios'); return; }
+            if(!nombre) { alert('Complete al menos el nombre del cliente'); return; }
 
-            const datosGuardar = { cliId, nombre, tel, ig };
+            const datosGuardar = { cedula, nombre, tel, instagram };
 
             if(id) {
                 await supabaseClient.from('clientes').update(datosGuardar).eq('id', id);
@@ -674,8 +661,8 @@
             cotizacionActualItems.push({ 
                 tipo: 'Insumo', 
                 id: insumo.id, 
-                desc: insumo.descripcion || insumo.desc || '', 
-                precio: insumo.costo_unitario || insumo.costo || 0, 
+                desc: insumo.categoria || 'Insumo', 
+                precio: insumo.precio || insumo.costo_unitario || 0, 
                 cant 
             });
             renderCotizacionItems();
@@ -754,7 +741,7 @@
         function generarPDFCotizacion() {
             const clienteId = document.getElementById('cotClienteSelect').value;
             const cliente = db.clientes.find(c => c.id == clienteId);
-            document.getElementById('previewClienteNombre').innerText = cliente ? (cliente.nombre || cliente.cliente_nombre) : 'Público General';
+            document.getElementById('previewClienteNombre').innerText = cliente ? cliente.nombre : 'Público General';
             document.getElementById('previewProyectoNombre').innerText = document.getElementById('cotProyectoNombre').value || 'Sin especificar';
 
             const element = document.getElementById('calculadora');
@@ -777,8 +764,8 @@
             facturaActualItems.push({ 
                 tipo: 'Insumo', 
                 id: insumo.id, 
-                desc: insumo.descripcion || insumo.desc || '', 
-                precio: insumo.costo_unitario || insumo.costo || 0, 
+                desc: insumo.categoria || 'Insumo', 
+                precio: insumo.precio || insumo.costo_unitario || 0, 
                 cant 
             });
             renderFacturacionItems();
@@ -851,7 +838,7 @@
 
             await supabaseClient.from('ventas').insert([{
                 fecha: new Date().toLocaleDateString(),
-                cliente: cliente ? (cliente.nombre || cliente.cliente_nombre) : 'Público General',
+                cliente: cliente ? cliente.nombre : 'Público General',
                 metodo,
                 total
             }]);
@@ -868,16 +855,16 @@
                 tbodyIns.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>';
             } else {
                 tbodyIns.innerHTML = db.insumos.map(i => {
-                    const desc = i.descripcion || i.desc || '';
-                    const cat = i.categoria || i.cat || '';
-                    const costo = parseFloat(i.costo_unitario || i.costo || 0);
+                    const costo = parseFloat(i.costo || 0);
+                    const costoUnit = parseFloat(i.costo_unitario || 0);
+                    const precio = parseFloat(i.precio || 0);
                     const stock = parseInt(i.stock || 0);
-                    const minimo = parseInt(i.stock_minimo || i.minimo || 0);
+                    const minimo = parseInt(i.stock_minimo || 0);
                     return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + (i.codigo || '') + '</td>' +
-                        '<td class="p-3">' + desc + '</td>' +
-                        '<td class="p-3">' + cat + '</td>' +
+                        '<td class="p-3 font-medium">' + (i.categoria || '') + '</td>' +
                         '<td class="p-3">$' + costo.toFixed(2) + '</td>' +
+                        '<td class="p-3">$' + costoUnit.toFixed(2) + '</td>' +
+                        '<td class="p-3">$' + precio.toFixed(2) + '</td>' +
                         '<td class="p-3 ' + (stock <= minimo ? 'text-red-600 font-bold' : '') + '">' + stock + '</td>' +
                         '<td class="p-3">' + minimo + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
@@ -890,12 +877,11 @@
 
             const tbodyServ = document.getElementById('tablaServiciosBody');
             if(db.servicios.length === 0) {
-                tbodyServ.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>';
+                tbodyServ.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>';
             } else {
                 tbodyServ.innerHTML = db.servicios.map(s => 
                     '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + (s.codigo || '') + '</td>' +
-                        '<td class="p-3">' + (s.nombre || '') + '</td>' +
+                        '<td class="p-3 font-medium">' + (s.nombre || '') + '</td>' +
                         '<td class="p-3 text-right">$' + parseFloat(s.precio || 0).toFixed(2) + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openServicioModal(\'' + s.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
@@ -910,15 +896,15 @@
                 tbodyCli.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>';
             } else {
                 tbodyCli.innerHTML = db.clientes.map(c => {
-                    const cliId = c.cliId || c.cliente_id || '';
-                    const nombre = c.nombre || c.cliente_nombre || '';
-                    const tel = c.tel || c.telefono || '';
-                    const ig = c.ig || c.instagram || '';
+                    const cedula = c.cedula || '';
+                    const nombre = c.nombre || '';
+                    const tel = c.tel || '';
+                    const instagram = c.instagram || '';
                     return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + cliId + '</td>' +
+                        '<td class="p-3 font-medium">' + cedula + '</td>' +
                         '<td class="p-3">' + nombre + '</td>' +
                         '<td class="p-3">' + tel + '</td>' +
-                        '<td class="p-3">' + ig + '</td>' +
+                        '<td class="p-3">' + instagram + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openClienteModal(\'' + c.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
                             '<button onclick="eliminarCliente(\'' + c.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
@@ -930,25 +916,21 @@
 
         function renderSelects() {
             const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => {
-                const nombre = c.nombre || c.cliente_nombre || '';
-                const cliId = c.cliId || c.cliente_id || '';
-                return '<option value="' + c.id + '">' + nombre + ' (' + cliId + ')</option>';
+                return '<option value="' + c.id + '">' + (c.nombre || '') + ' (' + (c.cedula || '') + ')</option>';
             }).join('');
             document.getElementById('cotClienteSelect').innerHTML = optCli;
             document.getElementById('factClienteSelect').innerHTML = optCli;
 
             const optIns = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => {
-                const desc = i.descripcion || i.desc || '';
-                const costo = i.costo_unitario || i.costo || 0;
-                return '<option value="' + i.id + '">' + desc + ' ($' + costo + ')</option>';
+                const desc = i.categoria || 'Insumo';
+                const precio = i.precio || i.costo_unitario || 0;
+                return '<option value="' + i.id + '">' + desc + ' ($' + precio + ')</option>';
             }).join('');
             document.getElementById('cotInsumoSelect').innerHTML = optIns;
             document.getElementById('factInsumoSelect').innerHTML = optIns;
 
             const optServ = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => {
-                const nombre = s.nombre || '';
-                const precio = s.precio || 0;
-                return '<option value="' + s.id + '">' + nombre + ' ($' + precio + ')</option>';
+                return '<option value="' + s.id + '">' + (s.nombre || '') + ' ($' + (s.precio || 0) + ')</option>';
             }).join('');
             document.getElementById('cotServicioSelect').innerHTML = optServ;
             document.getElementById('factServicioSelect').innerHTML = optServ;
@@ -960,7 +942,7 @@
             document.getElementById('dashInsumos').innerText = db.insumos.length;
             const alertass = db.insumos.filter(i => {
                 const stock = parseInt(i.stock || 0);
-                const minimo = parseInt(i.stock_minimo || i.minimo || 0);
+                const minimo = parseInt(i.stock_minimo || 0);
                 return stock <= minimo;
             }).length;
             document.getElementById('dashAlerta').innerText = alertass;
