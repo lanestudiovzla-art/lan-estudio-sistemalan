@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.25; background-color: #f8fafc; color: #1e293b; }
         .tab-content { display: none; }
@@ -96,7 +98,7 @@
                         </tr>
                     </thead>
                     <tbody id="tablaInsumosBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>
+                        <tr><td colspan="7" class="p-4 text-center text-slate-400">Cargando insumos...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -119,7 +121,7 @@
                         </tr>
                     </thead>
                     <tbody id="tablaServiciosBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="4" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>
+                        <tr><td colspan="4" class="p-4 text-center text-slate-400">Cargando servicios...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -325,7 +327,7 @@
                         </tr>
                     </thead>
                     <tbody id="tablaClientesBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>
+                        <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando clientes...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -439,28 +441,48 @@
         </div>
     </div>
 
-    <!-- Script de Funcionalidad Integral -->
+    <!-- Script con Conexión Real a Supabase -->
     <script>
+        // ==========================================
+        // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
+        // ==========================================
+        const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let db = {
-            insumos: JSON.parse(localStorage.getItem('lan_insumos')) || [],
-            servicios: JSON.parse(localStorage.getItem('lan_servicios')) || [],
-            clientes: JSON.parse(localStorage.getItem('lan_clientes')) || [],
-            ventas: JSON.parse(localStorage.getItem('lan_ventas')) || [],
+            insumos: [],
+            servicios: [],
+            clientes: [],
+            ventas: [],
             logo: localStorage.getItem('lan_logo') || ''
         };
 
         let cotizacionActualItems = [];
         let facturaActualItems = [];
 
-        function persistir() {
-            localStorage.setItem('lan_insumos', JSON.stringify(db.insumos));
-            localStorage.setItem('lan_servicios', JSON.stringify(db.servicios));
-            localStorage.setItem('lan_clientes', JSON.stringify(db.clientes));
-            localStorage.setItem('lan_ventas', JSON.stringify(db.ventas));
-            localStorage.setItem('lan_logo', db.logo);
-            actualizarDashboard();
-            renderTablas();
-            renderSelects();
+        // Cargar datos desde Supabase al iniciar
+        async function cargarDatosRemotos() {
+            try {
+                const [resIns, resServ, resCli, resVentas] = await Promise.all([
+                    supabaseClient.from('insumos').select('*'),
+                    supabaseClient.from('servicios').select('*'),
+                    supabaseClient.from('clientes').select('*'),
+                    supabaseClient.from('ventas').select('*')
+                ]);
+
+                if(resIns.data) db.insumos = resIns.data;
+                if(resServ.data) db.servicios = resServ.data;
+                if(resCli.data) db.clientes = resCli.data;
+                if(resVentas.data) db.ventas = resVentas.data;
+
+                actualizarDashboard();
+                renderTablas();
+                renderSelects();
+            } catch (error) {
+                console.error("Error al conectar con Supabase:", error);
+            }
         }
 
         setInterval(() => {
@@ -493,7 +515,7 @@
                 reader.onload = function(e) {
                     db.logo = e.target.result;
                     document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
-                    persistir();
+                    localStorage.setItem('lan_logo', db.logo);
                     alert('Logo actualizado con éxito.');
                 }
                 reader.readAsDataURL(fileInput.files[0]);
@@ -503,7 +525,7 @@
         function openInsumoModal(id = null) {
             document.getElementById('insumoEditId').value = id || '';
             if(id) {
-                const item = db.insumos.find(i => i.id === id);
+                const item = db.insumos.find(i => i.id == id);
                 document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
                 document.getElementById('insumoCodigo').value = item.codigo;
                 document.getElementById('insumoDesc').value = item.desc;
@@ -528,7 +550,7 @@
             document.getElementById('insumoModal').classList.remove('flex');
         }
 
-        function guardarInsumo() {
+        async function guardarInsumo() {
             const id = document.getElementById('insumoEditId').value;
             const codigo = document.getElementById('insumoCodigo').value;
             const desc = document.getElementById('insumoDesc').value;
@@ -540,26 +562,25 @@
             if(!codigo || !desc) { alert('Complete los campos obligatorios'); return; }
 
             if(id) {
-                const index = db.insumos.findIndex(i => i.id === id);
-                db.insumos[index] = { id, codigo, desc, cat, costo, stock, minimo };
+                await supabaseClient.from('insumos').update({ codigo, desc, cat, costo, stock, minimo }).eq('id', id);
             } else {
-                db.insumos.push({ id: Date.now().toString(), codigo, desc, cat, costo, stock, minimo });
+                await supabaseClient.from('insumos').insert([{ codigo, desc, cat, costo, stock, minimo }]);
             }
             closeInsumoModal();
-            persistir();
+            cargarDatosRemotos();
         }
 
-        function eliminarInsumo(id) {
+        async function eliminarInsumo(id) {
             if(confirm('¿Eliminar este insumo?')) {
-                db.insumos = db.insumos.filter(i => i.id !== id);
-                persistir();
+                await supabaseClient.from('insumos').delete().eq('id', id);
+                cargarDatosRemotos();
             }
         }
 
         function openServicioModal(id = null) {
             document.getElementById('servicioEditId').value = id || '';
             if(id) {
-                const item = db.servicios.find(s => s.id === id);
+                const item = db.servicios.find(s => s.id == id);
                 document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
                 document.getElementById('servCodigo').value = item.codigo;
                 document.getElementById('servNombre').value = item.nombre;
@@ -579,7 +600,7 @@
             document.getElementById('servicioModal').classList.remove('flex');
         }
 
-        function guardarServicio() {
+        async function guardarServicio() {
             const id = document.getElementById('servicioEditId').value;
             const codigo = document.getElementById('servCodigo').value;
             const nombre = document.getElementById('servNombre').value;
@@ -588,26 +609,25 @@
             if(!codigo || !nombre) { alert('Complete los campos obligatorios'); return; }
 
             if(id) {
-                const index = db.servicios.findIndex(s => s.id === id);
-                db.servicios[index] = { id, codigo, nombre, precio };
+                await supabaseClient.from('servicios').update({ codigo, nombre, precio }).eq('id', id);
             } else {
-                db.servicios.push({ id: Date.now().toString(), codigo, nombre, precio });
+                await supabaseClient.from('servicios').insert([{ codigo, nombre, precio }]);
             }
             closeServicioModal();
-            persistir();
+            cargarDatosRemotos();
         }
 
-        function eliminarServicio(id) {
+        async function eliminarServicio(id) {
             if(confirm('¿Eliminar este servicio?')) {
-                db.servicios = db.servicios.filter(s => s.id !== id);
-                persistir();
+                await supabaseClient.from('servicios').delete().eq('id', id);
+                cargarDatosRemotos();
             }
         }
 
         function openClienteModal(id = null) {
             document.getElementById('clienteEditId').value = id || '';
             if(id) {
-                const item = db.clientes.find(c => c.id === id);
+                const item = db.clientes.find(c => c.id == id);
                 document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
                 document.getElementById('cliId').value = item.cliId;
                 document.getElementById('cliNombre').value = item.nombre;
@@ -629,7 +649,7 @@
             document.getElementById('clienteModal').classList.remove('flex');
         }
 
-        function guardarCliente() {
+        async function guardarCliente() {
             const id = document.getElementById('clienteEditId').value;
             const cliId = document.getElementById('cliId').value;
             const nombre = document.getElementById('cliNombre').value;
@@ -639,26 +659,25 @@
             if(!cliId || !nombre) { alert('Complete los campos obligatorios'); return; }
 
             if(id) {
-                const index = db.clientes.findIndex(c => c.id === id);
-                db.clientes[index] = { id, cliId, nombre, tel, ig };
+                await supabaseClient.from('clientes').update({ cliId, nombre, tel, ig }).eq('id', id);
             } else {
-                db.clientes.push({ id: Date.now().toString(), cliId, nombre, tel, ig });
+                await supabaseClient.from('clientes').insert([{ cliId, nombre, tel, ig }]);
             }
             closeClienteModal();
-            persistir();
+            cargarDatosRemotos();
         }
 
-        function eliminarCliente(id) {
+        async function eliminarCliente(id) {
             if(confirm('¿Eliminar este cliente?')) {
-                db.clientes = db.clientes.filter(c => c.id !== id);
-                persistir();
+                await supabaseClient.from('clientes').delete().eq('id', id);
+                cargarDatosRemotos();
             }
         }
 
         function agregarInsumoACotizacion() {
             const id = document.getElementById('cotInsumoSelect').value;
             const cant = parseInt(document.getElementById('cotInsumoCant').value) || 1;
-            const insumo = db.insumos.find(i => i.id === id);
+            const insumo = db.insumos.find(i => i.id == id);
             if(!insumo) return;
 
             cotizacionActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
@@ -668,7 +687,7 @@
         function agregarServicioACotizacion() {
             const id = document.getElementById('cotServicioSelect').value;
             const cant = parseInt(document.getElementById('cotServicioCant').value) || 1;
-            const servicio = db.servicios.find(s => s.id === id);
+            const servicio = db.servicios.find(s => s.id == id);
             if(!servicio) return;
 
             cotizacionActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
@@ -731,7 +750,7 @@
 
         function generarPDFCotizacion() {
             const clienteId = document.getElementById('cotClienteSelect').value;
-            const cliente = db.clientes.find(c => c.id === clienteId);
+            const cliente = db.clientes.find(c => c.id == clienteId);
             document.getElementById('previewClienteNombre').innerText = cliente ? cliente.nombre : 'Público General';
             document.getElementById('previewProyectoNombre').innerText = document.getElementById('cotProyectoNombre').value || 'Sin especificar';
 
@@ -749,7 +768,7 @@
         function agregarInsumoAFacturacion() {
             const id = document.getElementById('factInsumoSelect').value;
             const cant = parseInt(document.getElementById('factInsumoCant').value) || 1;
-            const insumo = db.insumos.find(i => i.id === id);
+            const insumo = db.insumos.find(i => i.id == id);
             if(!insumo) return;
 
             facturaActualItems.push({ tipo: 'Insumo', id: insumo.id, desc: insumo.desc, precio: insumo.costo, cant });
@@ -759,7 +778,7 @@
         function agregarServicioAFacturacion() {
             const id = document.getElementById('factServicioSelect').value;
             const cant = parseInt(document.getElementById('factServicioCant').value) || 1;
-            const servicio = db.servicios.find(s => s.id === id);
+            const servicio = db.servicios.find(s => s.id == id);
             if(!servicio) return;
 
             facturaActualItems.push({ tipo: 'Servicio', id: servicio.id, desc: servicio.nombre, precio: servicio.precio, cant });
@@ -797,34 +816,36 @@
             document.getElementById('factTotalBs').innerText = 'Bs. ' + (total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits: 2});
         }
 
-        function procesarFactura() {
+        async function procesarFactura() {
             if(facturaActualItems.length === 0) { alert('No hay elementos en el ticket de venta.'); return; }
             const clienteId = document.getElementById('factClienteSelect').value;
-            const cliente = db.clientes.find(c => c.id === clienteId);
+            const cliente = db.clientes.find(c => c.id == clienteId);
             const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
             const total = facturaActualItems.reduce((acc, item) => acc + (item.precio * item.cant), 0);
 
-            // Descontar inventario de insumos vendidos
-            facturaActualItems.forEach(item => {
+            // Descontar inventario en Supabase
+            for(const item of facturaActualItems) {
                 if(item.tipo === 'Insumo') {
-                    const ins = db.insumos.find(i => i.id === item.id);
+                    const ins = db.insumos.find(i => i.id == item.id);
                     if(ins) {
-                        ins.stock = Math.max(0, ins.stock - item.cant);
+                        const nuevoStock = Math.max(0, ins.stock - item.cant);
+                        await supabaseClient.from('insumos').update({ stock: nuevoStock }).eq('id', ins.id);
                     }
                 }
-            });
+            }
 
-            db.ventas.push({
+            // Registrar venta
+            await supabaseClient.from('ventas').insert([{
                 fecha: new Date().toLocaleDateString(),
                 cliente: cliente ? cliente.nombre : 'Público General',
                 metodo,
                 total
-            });
+            }]);
 
             facturaActualItems = [];
             renderFacturacionItems();
-            persistir();
-            alert('¡Venta procesada con éxito y stock actualizado!');
+            await cargarDatosRemotos();
+            alert('¡Venta procesada con éxito y stock actualizado en la nube!');
         }
 
         function renderTablas() {
@@ -837,7 +858,7 @@
                         '<td class="p-3 font-medium">' + i.codigo + '</td>' +
                         '<td class="p-3">' + i.desc + '</td>' +
                         '<td class="p-3">' + i.cat + '</td>' +
-                        '<td class="p-3">$' + i.costo.toFixed(2) + '</td>' +
+                        '<td class="p-3">$' + parseFloat(i.costo).toFixed(2) + '</td>' +
                         '<td class="p-3 ' + (i.stock <= i.minimo ? 'text-red-600 font-bold' : '') + '">' + i.stock + '</td>' +
                         '<td class="p-3">' + i.minimo + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
@@ -856,7 +877,7 @@
                     '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
                         '<td class="p-3 font-medium">' + s.codigo + '</td>' +
                         '<td class="p-3">' + s.nombre + '</td>' +
-                        '<td class="p-3 text-right">$' + s.precio.toFixed(2) + '</td>' +
+                        '<td class="p-3 text-right">$' + parseFloat(s.precio).toFixed(2) + '</td>' +
                         '<td class="p-3 text-right space-x-2">' +
                             '<button onclick="openServicioModal(\'' + s.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
                             '<button onclick="eliminarServicio(\'' + s.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
@@ -899,7 +920,7 @@
         }
 
         function actualizarDashboard() {
-            const totalVentas = db.ventas.reduce((acc, v) => acc + v.total, 0);
+            const totalVentas = db.ventas.reduce((acc, v) => acc + parseFloat(v.total || 0), 0);
             document.getElementById('dashVentas').innerText = '$' + totalVentas.toFixed(2);
             document.getElementById('dashInsumos').innerText = db.insumos.length;
             const alertass = db.insumos.filter(i => i.stock <= i.minimo).length;
@@ -907,9 +928,8 @@
             document.getElementById('dashServicios').innerText = db.servicios.length;
         }
 
-        renderTablas();
-        renderSelects();
-        actualizarDashboard();
+        // Inicializar carga de datos remotos
+        cargarDatosRemotos();
     </script>
 </body>
 </html>
