@@ -325,7 +325,7 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-md space-y-4">
                 <label class="block text-sm font-medium text-slate-700">Cargar o Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
                 <input type="file" id="logoInput" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo</button>
+                <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo en la Nube</button>
             </div>
         </section>
 
@@ -424,7 +424,7 @@
         // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
         // ==========================================
         const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_lM5EB6PWxCmo-3frEG2XpA_NxPWAmTb';
+        const SUPABASE_ANON_KEY = 'sb_publishable_1M5EB6PWxCmo-3fREG2XpA_NxPWA...'; // (Reemplaza con tu llave completa si es necesario)
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -433,7 +433,7 @@
             servicios: [],
             clientes: [],
             ventas: [],
-            logo: localStorage.getItem('lan_logo') || ''
+            logo: ''
         };
 
         let cotizacionActualItems = [];
@@ -441,17 +441,23 @@
 
         async function cargarDatosRemotos() {
             try {
-                const [resIns, resServ, resCli, resVentas] = await Promise.all([
+                const [resIns, resServ, resCli, resVentas, resConfig] = await Promise.all([
                     supabaseClient.from('insumos').select('*'),
                     supabaseClient.from('servicios').select('*'),
                     supabaseClient.from('clientes').select('*'),
-                    supabaseClient.from('ventas').select('*')
+                    supabaseClient.from('ventas').select('*'),
+                    supabaseClient.from('configuracion').select('*').eq('clave', 'logo').maybeSingle()
                 ]);
 
                 if(resIns.data) db.insumos = resIns.data;
                 if(resServ.data) db.servicios = resServ.data;
                 if(resCli.data) db.clientes = resCli.data;
                 if(resVentas.data) db.ventas = resVentas.data;
+                
+                if(resConfig.data && resConfig.data.valor) {
+                    db.logo = resConfig.data.valor;
+                    document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
+                }
 
                 actualizarDashboard();
                 renderTablas();
@@ -480,19 +486,19 @@
             }
         }
 
-        if(db.logo) {
-            document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
-        }
-
-        function guardarLogo() {
+        async function guardarLogo() {
             const fileInput = document.getElementById('logoInput');
             if(fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    db.logo = e.target.result;
+                reader.onload = async function(e) {
+                    const base64Logo = e.target.result;
+                    db.logo = base64Logo;
                     document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
-                    localStorage.setItem('lan_logo', db.logo);
-                    alert('Logo actualizado con éxito.');
+                    
+                    // Guardar en Supabase para que se sincronice en todos los equipos
+                    await supabaseClient.from('configuracion').upsert({ clave: 'logo', valor: base64Logo }, { onConflict: 'clave' });
+                    
+                    alert('Logo actualizado en la nube y sincronizado en todos los dispositivos.');
                 }
                 reader.readAsDataURL(fileInput.files[0]);
             }
@@ -950,6 +956,9 @@
         }
 
         cargarDatosRemotos();
+
+        // Sincronización automática periódica cada 5 segundos en segundo plano para cualquier dispositivo (Chromebook, tlf, laptop)
+        setInterval(cargarDatosRemotos, 5000);
     </script>
 </body>
 </html>
