@@ -12,13 +12,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
-    </style>
-</head>
-<body class="bg-[#faf8f6] text-[#2c2c2c] antialiased min-h-screen flex flex-col">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
 
+    /* Estilos dinámicos cuando se exporta a PDF */
+    .en-modo-pdf .no-print-controls { display: none !important; }
+    .en-modo-pdf .internal-col { display: none !important; }
+    .en-modo-pdf input, .en-modo-pdf select {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        font-size: 12px !important;
+        color: #2c2c2c !important;
+        appearance: none;
+    }
+    .en-modo-pdf .precio-cliente-input {
+        color: #b88a73 !important;
+        font-weight: bold !important;
+        text-align: right !important;
+    }
+</style>
     <!-- Topbar con Barra de Tasa BCV Automática y Logo -->
     <header class="bg-[#2c2c2c] border-b border-[#e8dbd3] px-6 py-4 flex flex-wrap justify-between items-center shadow-sm text-white">
         <div class="flex items-center space-x-3">
@@ -689,50 +703,25 @@
             }
         }
 
-        function exportarPDFPresupuesto() {
-            const originalArea = document.getElementById('area-impresion-presupuesto');
-            
-            // Clonamos el contenedor para manipularlo de forma segura sin afectar la vista del usuario
-            const clone = originalArea.cloneNode(true);
-            
-            // Eliminamos controles de edición y columnas internas del clon
-            clone.querySelectorAll('.no-print-controls').forEach(el => el.remove());
-            clone.querySelectorAll('.internal-col').forEach(el => el.remove());
+       function exportarPDFPresupuesto() {
+    const elemento = document.getElementById('area-impresion-presupuesto');
+    
+    // Añadimos una clase temporal al contenedor para modo impresión
+    elemento.classList.add('en-modo-pdf');
 
-            // Convertimos los inputs de Descripción, Cantidad y Precio Final en texto plano estático dentro del clon
-            clone.querySelectorAll('.renglon-item').forEach((row, index) => {
-                const originalRow = originalArea.querySelectorAll('.renglon-item')[index];
-                
-                const descVal = originalRow.querySelector('.desc-input').value || '';
-                const cantVal = originalRow.querySelector('.cant-input').value || '1';
-                const precioVal = parseFloat(originalRow.querySelector('.precio-cliente-input').value || 0).toFixed(2);
+    const opt = {
+        margin:       [0.4, 0.4, 0.4, 0.4],
+        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
 
-                const descTd = row.cells[0];
-                const cantTd = row.cells[1];
-                const precioTd = row.cells[2]; // Al eliminar las internas, pasa a ser la posición 2
-
-                if(descTd) descTd.innerHTML = `<span style="font-size: 12px; color: #2c2c2c; font-weight: 500;">${descVal}</span>`;
-                if(cantTd) cantTd.innerHTML = `<span style="font-size: 12px; color: #2c2c2c; text-align: center; display: block;">${cantVal}</span>`;
-                if(precioTd) precioTd.innerHTML = `<span style="font-size: 12px; color: #b88a73; font-weight: bold; text-align: right; display: block;">$${precioVal}</span>`;
-            });
-
-            // Ajustamos anchos y estilos generales para asegurar un PDF perfecto formato carta
-            clone.style.width = '700px';
-            clone.style.padding = '20px';
-            clone.style.background = '#ffffff';
-            clone.style.border = 'none';
-            clone.style.boxShadow = 'none';
-
-            const opt = {
-                margin:       [0.4, 0.4, 0.4, 0.4],
-                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 750 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            html2pdf().from(clone).set(opt).save();
-        }
+    html2pdf().from(elemento).set(opt).save().then(() => {
+        // Quitamos la clase al terminar para que todo vuelva a la normalidad en pantalla
+        elemento.classList.remove('en-modo-pdf');
+    });
+}
 
         let filasPagosCount = 0;
 
