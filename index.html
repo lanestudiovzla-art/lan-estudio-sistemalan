@@ -15,28 +15,74 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        @media print {
-    /* Oculta los botones de añadir, los inputs de acción y la columna de eliminar */
-    button, 
-    .btn, 
-    th:last-child, 
-    td:last-child, 
-    .acciones-col {
-        display: none !important;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
 
-    /* Quita el diseño de "cajita" o input para que los textos y números se lean planos en el PDF */
-    input, select {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        outline: none !important;
-        padding: 0 !important;
-        appearance: none;
-        -webkit-appearance: none;
-        color: inherit !important;
-    }
-}
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+
+            #area-impresion-presupuesto, #area-impresion-presupuesto * {
+                visibility: visible !important;
+            }
+
+            #area-impresion-presupuesto {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: #ffffff !important;
+                color: #1e293b !important;
+                padding: 10px !important;
+            }
+
+            button, 
+            .btn, 
+            #añadir-servicio, 
+            #añadir-insumo,
+            .fa-trash {
+                display: none !important;
+            }
+
+            /* Ocultar columnas internas de costos, ganancia y acción */
+            th:nth-child(3), td:nth-child(3),
+            th:nth-child(4), td:nth-child(4),
+            th:nth-child(5), td:nth-child(5),
+            th:nth-child(7), td:nth-child(7),
+            #doc-subtotal-costo,
+            #doc-total-ganancia {
+                display: none !important;
+            }
+
+            input, select {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                outline: none !important;
+                padding: 0 !important;
+                appearance: none;
+                -webkit-appearance: none;
+                color: #1e293b !important;
+                font-weight: 500;
+            }
+
+            #area-impresion-presupuesto table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+
+            #area-impresion-presupuesto th {
+                background-color: #f1f5f9 !important;
+                color: #475569 !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+            }
+
+            #area-impresion-presupuesto td {
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #334155 !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
