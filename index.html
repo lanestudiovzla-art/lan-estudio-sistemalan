@@ -4,52 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAN Estudio - Sistema Integral de Gestión</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
 
-        /* Estilos definitivos para el PDF con estructura fija infalible */
+        /* Estilos limpios para el PDF */
+        .en-modo-pdf { background-color: #ffffff !important; padding: 20px !important; width: 100% !important; }
         .en-modo-pdf .no-print-controls { display: none !important; }
         .en-modo-pdf .internal-col { display: none !important; }
-        
-        .en-modo-pdf table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
-        .en-modo-pdf th, .en-modo-pdf td { box-sizing: border-box !important; overflow: hidden !important; }
-        
-        /* Forzar anchos exactos en celdas visibles para evitar colapso de descripción */
-        .en-modo-pdf th:nth-child(1), .en-modo-pdf td:nth-child(1) { width: 70% !important; display: table-cell !important; }
-        .en-modo-pdf th:nth-child(2), .en-modo-pdf td:nth-child(2) { width: 15% !important; display: table-cell !important; text-align: center !important; }
-        .en-modo-pdf th:nth-child(6), .en-modo-pdf td:nth-child(6) { width: 15% !important; display: table-cell !important; text-align: right !important; }
-
-        .en-modo-pdf input, .en-modo-pdf select {
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
-            font-size: 11px !important;
-            color: #2c2c2c !important;
-            appearance: none;
-            outline: none !important;
-            box-shadow: none !important;
-        }
-        .en-modo-pdf .desc-input {
-            display: block !important;
-            width: 100% !important;
-            font-weight: 500 !important;
-        }
-        .en-modo-pdf .precio-cliente-input {
-            color: #b88a73 !important;
-            font-weight: bold !important;
-            text-align: right !important;
-            display: block !important;
-            width: 100% !important;
-        }
+        .en-modo-pdf input, .en-modo-pdf select { border: none !important; background: transparent !important; appearance: none; outline: none !important; box-shadow: none !important; pointer-events: none; padding: 0 !important; color: #2c2c2c !important; }
     </style>
 </head>
 <body class="bg-[#faf8f6] text-[#2c2c2c] antialiased min-h-screen flex flex-col">
@@ -217,15 +184,14 @@
                         </div>
 
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-gray-700">
+                            <table class="w-full text-left text-xs text-gray-700 border-collapse">
                                 <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                                     <tr>
-                                        <th class="p-3 w-[70%]">Descripción / Concepto</th>
+                                        <th class="p-3 w-[60%]">Descripción / Concepto</th>
                                         <th class="p-3 w-[15%] text-center">Cant</th>
-                                        <th class="p-3 w-[14%] text-center internal-col">Costo Unit. ($)</th>
-                                        <th class="p-3 w-[12%] text-center internal-col">% Ganancia</th>
-                                        <th class="p-3 w-[14%] text-right internal-col">Precio Sug. ($)</th>
-                                        <th class="p-3 w-[15%] text-right font-bold text-[#b88a73]">Precio Final ($)</th>
+                                        <th class="p-3 w-[10%] text-center internal-col">Costo</th>
+                                        <th class="p-3 w-[10%] text-center internal-col">% Gan.</th>
+                                        <th class="p-3 w-[15%] text-right font-bold text-[#b88a73]">Precio Final</th>
                                         <th class="p-3 w-[10%] text-center no-print-controls">Acción</th>
                                     </tr>
                                 </thead>
@@ -560,26 +526,25 @@
 
             const html = `
                 <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
-                    <td class="p-3 w-[70%]">
-                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1.5 py-1 text-[11px] w-full select-servicio no-print-controls mb-1 truncate" onchange="seleccionarServicioCatalogo('${rowId}')">
+                    <td class="p-3">
+                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full select-servicio no-print-controls mb-1" onchange="seleccionarServicioCatalogo('${rowId}')">
                             ${opcionesServicios}
                         </select>
                         <input type="text" value="${nombreDefault}" placeholder="Descripción" class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1.5 text-xs w-full desc-input font-medium">
                     </td>
-                    <td class="p-3 w-[15%] text-center align-middle">
-                        <input type="number" value="1" min="1" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle">
+                        <input type="number" value="1" min="1" class="w-16 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[14%] text-center align-middle internal-col">
-                        <input type="number" step="0.01" value="${costoDefault}" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center costo-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle internal-col">
+                        <input type="number" step="0.01" value="${costoDefault}" class="w-20 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center costo-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[12%] text-center align-middle internal-col">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle internal-col">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[14%] text-right text-[#b88a73] font-semibold sugerido-txt align-middle internal-col truncate">$0.00</td>
-                    <td class="p-3 w-[15%] text-right align-middle">
-                        <input type="number" step="0.01" value="0.00" class="w-full bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-1.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
+                    <td class="p-3 text-right align-middle">
+                        <input type="number" step="0.01" value="0.00" class="w-24 ml-auto bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
-                    <td class="p-3 w-[10%] text-center align-middle no-print-controls">
+                    <td class="p-3 text-center align-middle no-print-controls">
                         <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
@@ -601,26 +566,25 @@
 
             const html = `
                 <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
-                    <td class="p-3 w-[70%]">
-                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1.5 py-1 text-[11px] w-full select-insumo no-print-controls mb-1 truncate" onchange="seleccionarInsumoCatalogo('${rowId}')">
+                    <td class="p-3">
+                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full select-insumo no-print-controls mb-1" onchange="seleccionarInsumoCatalogo('${rowId}')">
                             ${opcionesInsumos}
                         </select>
                         <input type="text" placeholder="Insumo" class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1.5 text-xs w-full desc-input font-medium">
                     </td>
-                    <td class="p-3 w-[15%] text-center align-middle">
-                        <input type="number" value="1" min="1" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle">
+                        <input type="number" value="1" min="1" class="w-16 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[14%] text-center align-middle internal-col">
-                        <input type="number" step="0.01" value="0.00" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center costo-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle internal-col">
+                        <input type="number" step="0.01" value="0.00" class="w-20 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center costo-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[12%] text-center align-middle internal-col">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
+                    <td class="p-3 text-center align-middle internal-col">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 mx-auto bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-3 w-[14%] text-right text-[#b88a73] font-semibold sugerido-txt align-middle internal-col truncate">$0.00</td>
-                    <td class="p-3 w-[15%] text-right align-middle">
-                        <input type="number" step="0.01" value="0.00" class="w-full bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-1.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
+                    <td class="p-3 text-right align-middle">
+                        <input type="number" step="0.01" value="0.00" class="w-24 ml-auto bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
-                    <td class="p-3 w-[10%] text-center align-middle no-print-controls">
+                    <td class="p-3 text-center align-middle no-print-controls">
                         <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
@@ -687,7 +651,6 @@
                 subtotalCostoGlobal += costoTotalItem;
 
                 const sugeridoItem = costoTotalItem * (1 + (gananciaPct / 100));
-                row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
 
                 const clienteInput = row.querySelector('.precio-cliente-input');
                 if(!clienteInput.dataset.modified) {
@@ -727,10 +690,11 @@
         function exportarPDFPresupuesto() {
             const elemento = document.getElementById('area-impresion-presupuesto');
             
+            // Añadir clase para ocultar elementos de control
             elemento.classList.add('en-modo-pdf');
 
             const opt = {
-                margin:       [0.4, 0.4, 0.4, 0.4],
+                margin:       [0.5, 0.5, 0.5, 0.5],
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
