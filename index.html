@@ -12,27 +12,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
 
-    /* Estilos dinámicos cuando se exporta a PDF */
-    .en-modo-pdf .no-print-controls { display: none !important; }
-    .en-modo-pdf .internal-col { display: none !important; }
-    .en-modo-pdf input, .en-modo-pdf select {
-        border: none !important;
-        background: transparent !important;
-        padding: 0 !important;
-        font-size: 12px !important;
-        color: #2c2c2c !important;
-        appearance: none;
-    }
-    .en-modo-pdf .precio-cliente-input {
-        color: #b88a73 !important;
-        font-weight: bold !important;
-        text-align: right !important;
-    }
-</style>
+        /* Estilos limpios para el PDF */
+        .en-modo-pdf .no-print-controls { display: none !important; }
+        .en-modo-pdf .internal-col { display: none !important; }
+        .en-modo-pdf input, .en-modo-pdf select {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            font-size: 12px !important;
+            color: #2c2c2c !important;
+            appearance: none;
+        }
+        .en-modo-pdf .precio-cliente-input {
+            color: #b88a73 !important;
+            font-weight: bold !important;
+            text-align: right !important;
+        }
+    </style>
+</head>
+<body class="bg-[#faf8f6] text-[#2c2c2c] antialiased min-h-screen flex flex-col">
+
     <!-- Topbar con Barra de Tasa BCV Automática y Logo -->
     <header class="bg-[#2c2c2c] border-b border-[#e8dbd3] px-6 py-4 flex flex-wrap justify-between items-center shadow-sm text-white">
         <div class="flex items-center space-x-3">
@@ -196,7 +199,7 @@
                         </div>
 
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-gray-700 table-fixed">
+                            <table class="w-full text-left text-xs text-gray-700">
                                 <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                                     <tr>
                                         <th class="p-3 w-[38%]">Descripción / Concepto</th>
@@ -703,25 +706,25 @@
             }
         }
 
-       function exportarPDFPresupuesto() {
-    const elemento = document.getElementById('area-impresion-presupuesto');
-    
-    // Añadimos una clase temporal al contenedor para modo impresión
-    elemento.classList.add('en-modo-pdf');
+        function exportarPDFPresupuesto() {
+            const elemento = document.getElementById('area-impresion-presupuesto');
+            
+            // Aplicamos la clase que oculta controles e inputs para dejarlo como texto plano impreso
+            elemento.classList.add('en-modo-pdf');
 
-    const opt = {
-        margin:       [0.4, 0.4, 0.4, 0.4],
-        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
+            const opt = {
+                margin:       [0.4, 0.4, 0.4, 0.4],
+                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
 
-    html2pdf().from(elemento).set(opt).save().then(() => {
-        // Quitamos la clase al terminar para que todo vuelva a la normalidad en pantalla
-        elemento.classList.remove('en-modo-pdf');
-    });
-}
+            html2pdf().from(elemento).set(opt).save().then(() => {
+                // Removemos la clase inmediatamente al terminar de generar el PDF
+                elemento.classList.remove('en-modo-pdf');
+            });
+        }
 
         let filasPagosCount = 0;
 
