@@ -12,107 +12,56 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <style>
-    @media print {
-        body * {
-            visibility: hidden !important;
-        }
-    }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #area-impresion-presupuesto, #area-impresion-presupuesto * { visibility: visible !important; }
             #area-impresion-presupuesto {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                background: #ffffff !important;
-                color: #1e293b !important;
-                padding: 10px !important;
-            }
-
-            button, 
-            .btn, 
-            #añadir-servicio, 
-            #añadir-insumo,
-            .fa-trash {
-                display: none !important;
-            }
-
-            /* Ocultar columnas internas de costos, ganancia y acción */
-            th:nth-child(3), td:nth-child(3),
-            th:nth-child(4), td:nth-child(4),
-            th:nth-child(5), td:nth-child(5),
-            th:nth-child(7), td:nth-child(7),
-            #doc-subtotal-costo,
-            #doc-total-ganancia {
-                display: none !important;
-            }
-
-            input, select {
-                border: none !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                outline: none !important;
-                padding: 0 !important;
-                appearance: none;
-                -webkit-appearance: none;
-                color: #1e293b !important;
-                font-weight: 500;
-            }
-
-            #area-impresion-presupuesto table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-            }
-
-            #area-impresion-presupuesto th {
-                background-color: #f1f5f9 !important;
-                color: #475569 !important;
-                border-bottom: 2px solid #cbd5e1 !important;
-            }
-
-            #area-impresion-presupuesto td {
-                border-bottom: 1px solid #e2e8f0 !important;
-                color: #334155 !important;
+                position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important;
+                background: #ffffff !important; color: #2c2c2c !important; padding: 20px !important;
             }
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+<body class="bg-[#faf8f6] text-[#2c2c2c] antialiased min-h-screen flex flex-col">
 
     <!-- Topbar con Barra de Tasa BCV Automática y Logo -->
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex flex-wrap justify-between items-center shadow-md">
+    <header class="bg-[#2c2c2c] border-b border-[#e8dbd3] px-6 py-4 flex flex-wrap justify-between items-center shadow-sm text-white">
         <div class="flex items-center space-x-3">
-            <div id="logo-container" class="bg-indigo-600 p-2 rounded-lg text-white font-bold text-xl flex items-center justify-center">
+            <div id="logo-container" class="bg-[#b88a73] p-2.5 rounded-xl text-white font-bold text-xl flex items-center justify-center shadow-sm">
                 <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white tracking-wide">LAN Estudio</h1>
-                <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
+                <h1 class="text-lg font-bold tracking-wide">LAN Estudio</h1>
+                <p class="text-xs text-gray-300">Agencia de Publicidad y Comunicación</p>
             </div>
         </div>
 
         <!-- Indicador Tasa BCV Automática -->
-        <div class="flex items-center space-x-4 mt-2 sm:mt-0 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-700">
+        <div class="flex items-center space-x-4 mt-2 sm:mt-0 bg-[#383838] px-4 py-2 rounded-xl border border-[#4d4d4d]">
             <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-xs text-slate-300 font-medium">Tasa BCV Oficial:</span>
-                <span id="bcv-rate-display" class="text-sm font-bold text-emerald-400">Cargando...</span>
+                <span class="w-3 h-3 rounded-full bg-[#b88a73] animate-pulse"></span>
+                <span class="text-xs text-gray-300 font-medium">Tasa BCV Oficial:</span>
+                <span id="bcv-rate-display" class="text-sm font-bold text-white">Cargando...</span>
             </div>
-            <button onclick="fetchBCVRate()" title="Actualizar Tasa BCV" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded transition">
+            <button onclick="fetchBCVRate()" title="Actualizar Tasa BCV" class="text-xs bg-[#4d4d4d] hover:bg-[#5e5e5e] text-white px-2.5 py-1 rounded transition">
                 <i class="fa-solid fa-sync"></i>
             </button>
         </div>
     </header>
 
     <!-- Navegación General de Módulos -->
-    <nav class="bg-slate-800/60 border-b border-slate-700 px-6 py-2 flex space-x-2 overflow-x-auto">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
-        <button onclick="switchTab('calculadora')" id="tab-calculadora" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Cotizador y Presupuestos</button>
-        <button onclick="switchTab('caja')" id="tab-caja" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-cash-register mr-2"></i>Factura / Caja y Pagos</button>
-        <button onclick="switchTab('insumos')" id="tab-insumos" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Stock</button>
-        <button onclick="switchTab('servicios')" id="tab-servicios" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios</button>
-        <button onclick="switchTab('crm')" id="tab-crm" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
-        <button onclick="switchTab('finanzas')" id="tab-finanzas" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-wallet mr-2"></i>Control Financiero</button>
-        <button onclick="switchTab('logo')" id="tab-logo" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-image mr-2"></i>Configurar Logo</button>
+    <nav class="bg-white border-b border-[#e8dbd3] px-6 py-3 flex space-x-2 overflow-x-auto shadow-xs">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-xl font-medium text-sm bg-[#2c2c2c] text-white transition shadow-sm"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+        <button onclick="switchTab('calculadora')" id="tab-calculadora" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Cotizador y Presupuestos</button>
+        <button onclick="switchTab('caja')" id="tab-caja" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-cash-register mr-2"></i>Factura / Caja y Pagos</button>
+        <button onclick="switchTab('insumos')" id="tab-insumos" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Stock</button>
+        <button onclick="switchTab('servicios')" id="tab-servicios" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios</button>
+        <button onclick="switchTab('crm')" id="tab-crm" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
+        <button onclick="switchTab('finanzas')" id="tab-finanzas" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-wallet mr-2"></i>Control Financiero</button>
+        <button onclick="switchTab('logo')" id="tab-logo" class="px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition"><i class="fa-solid fa-image mr-2"></i>Configurar Logo</button>
     </nav>
 
     <!-- Contenedor Principal de Módulos -->
@@ -121,29 +70,29 @@
         <!-- MÓDULO: DASHBOARD -->
         <section id="module-dashboard" class="space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Ventas Totales</p>
-                    <h3 id="dash-ventas" class="text-2xl font-bold text-emerald-400 mt-2">$0.00</h3>
+                <div class="bg-white p-5 rounded-2xl border border-[#e8dbd3] shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Ventas Totales</p>
+                    <h3 id="dash-ventas" class="text-2xl font-bold text-[#b88a73] mt-2">$0.00</h3>
                 </div>
-                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Insumos Registrados</p>
-                    <h3 id="dash-insumos" class="text-2xl font-bold text-indigo-400 mt-2">0</h3>
+                <div class="bg-white p-5 rounded-2xl border border-[#e8dbd3] shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Insumos Registrados</p>
+                    <h3 id="dash-insumos" class="text-2xl font-bold text-[#2c2c2c] mt-2">0</h3>
                 </div>
-                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Clientes en CRM</p>
-                    <h3 id="dash-clientes" class="text-2xl font-bold text-sky-400 mt-2">0</h3>
+                <div class="bg-white p-5 rounded-2xl border border-[#e8dbd3] shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Clientes en CRM</p>
+                    <h3 id="dash-clientes" class="text-2xl font-bold text-[#2c2c2c] mt-2">0</h3>
                 </div>
-                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Insumos Bajos (Alerta)</p>
-                    <h3 id="dash-alertas" class="text-2xl font-bold text-rose-400 mt-2">0</h3>
+                <div class="bg-white p-5 rounded-2xl border border-[#e8dbd3] shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Insumos Bajos (Alerta)</p>
+                    <h3 id="dash-alertas" class="text-2xl font-bold text-rose-500 mt-2">0</h3>
                 </div>
             </div>
             
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-indigo-400"></i> Historial Reciente de Transacciones</h3>
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm">
+                <h3 class="text-lg font-bold text-[#2c2c2c] mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-[#b88a73]"></i> Historial Reciente de Transacciones</h3>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                             <tr>
                                 <th class="p-3">Fecha</th>
                                 <th class="p-3">Cliente</th>
@@ -153,109 +102,166 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-historial-ventas">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-500">Cargando registros...</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Cargando registros...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-<!-- MÓDULO: COTIZADOR Y PRESUPUESTOS (Diseño adaptado a LAN Estudio) -->
-<section id="module-calculadora" class="space-y-6">
-    <!-- Contenedor principal con estilo elegante y limpio -->
-    <div class="bg-white border border-[#e8dbd3] p-6 md:p-8 rounded-2xl shadow-xl space-y-6">
-        
-        <!-- CABECERA CON IDENTIDAD DE MARCA -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-[#f0ede9]">
-            <div class="flex items-center gap-4">
-                <!-- LOGO O NOMBRE DE LA AGENCIA -->
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md" style="background-color: #2c2c2c;">
-                    LAN
+        <!-- MÓDULO: COTIZADOR Y PRESUPUESTOS -->
+        <section id="module-calculadora" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-6">
+                
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-[#2c2c2c] flex items-center"><i class="fa-solid fa-file-invoice-dollar text-[#b88a73] mr-2"></i> Generador de Presupuestos Profesionales</h2>
+                        <p class="text-xs text-gray-500">Selecciona tus servicios o insumos, ajusta la ganancia y genera el presupuesto listo para enviar.</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="exportarPDFPresupuesto()" class="bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-4 py-2.5 rounded-xl font-bold text-sm transition shadow-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Exportar PDF / Imprimir</span>
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight" style="color: #2c2c2c;">Gestor de Presupuestos</h1>
-                    <p class="text-sm font-medium text-gray-500">Agencia de Publicidad y Comunicación — Cotizaciones a medida.</p>
+
+                <!-- Datos del Cliente y Configuración del Presupuesto -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Cliente Destino</label>
+                        <select id="presupuesto-cliente" class="w-full bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm focus:outline-none">
+                            <option value="Cliente General">-- Seleccionar Cliente CRM --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Validez del Presupuesto</label>
+                        <input type="text" id="presupuesto-validez" value="7 días hábiles" class="w-full bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">% de Ganancia Global por Defecto</label>
+                        <input type="number" id="presupuesto-ganancia-global" value="30" step="1" class="w-full bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
+                    </div>
                 </div>
-            </div>
-            
-            <!-- TASA BCV OFICIAL -->
-            <div class="bg-[#faf8f6] px-4 py-2.5 rounded-xl border border-[#e8dbd3] text-right">
-                <div class="text-xs font-bold uppercase tracking-wider" style="color: #b88a73;">Tasa BCV Actual</div>
-                <div id="tasa-bcv-display" class="font-extrabold text-lg tabular-nums text-gray-800">Cargando...</div>
-            </div>
-        </div>
 
-        <!-- BARRA DE ACCIONES Y BÚSQUEDA -->
-        <div class="bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3] flex flex-wrap justify-between items-center gap-4">
-            <!-- Buscador -->
-            <div class="relative w-full md:w-96">
-                <input type="text" id="buscador-servicios" placeholder="Buscar servicio o insumo..." class="w-full bg-white text-gray-800 border border-[#e8dbd3] rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-[#b88a73] focus:outline-none text-sm">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            </div>
-            
-            <!-- Botones de Acción -->
-            <div class="flex space-x-3 w-full md:w-auto justify-end">
-                <button id="btn-agregar-servicio" class="text-white px-5 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 text-sm shadow-sm" style="background-color: #2c2c2c;">
-                    <i class="fas fa-plus-circle" style="color: #b88a73;"></i>
-                    Añadir Servicio
-                </button>
-                <button onclick="exportarPDFPresupuesto()" class="text-white px-5 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 text-sm shadow-sm" style="background-color: #b88a73;">
-                    <i class="fas fa-file-pdf"></i>
-                    <span>Generar PDF / Imprimir</span>
-                </button>
-            </div>
-        </div>
+                <!-- Contenedor Imprimible del Presupuesto (Diseño PDF) -->
+                <div id="area-impresion-presupuesto" class="bg-[#faf8f6] p-6 rounded-2xl border border-[#e8dbd3] space-y-6">
+                    <!-- Cabecera del Documento PDF -->
+                    <div class="flex justify-between items-start border-b border-[#e8dbd3] pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-[#2c2c2c] tracking-wide">LAN ESTUDIO</h3>
+                            <p class="text-xs text-gray-500">Agencia de Publicidad y Comunicación</p>
+                            <p class="text-xs text-gray-500 mt-1">Rif / NIT: J-XXXXXXXX-X</p>
+                        </div>
+                        <div class="text-right">
+                            <h4 class="text-sm font-bold text-[#b88a73] uppercase tracking-widest">PRESUPUESTO</h4>
+                            <p id="presupuesto-fecha-doc" class="text-xs text-gray-500 mt-1">Fecha: --/--/----</p>
+                            <p class="text-xs text-gray-500">Ref Tasa BCV: <span id="presupuesto-tasa-doc" class="text-[#2c2c2c] font-semibold">0.00</span></p>
+                        </div>
+                    </div>
 
-        <!-- CONTENEDOR DE LA TABLA Y CLIENTE -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-700">Detalle del Presupuesto y Partidas</h3>
-            </div>
-            
-            <!-- El contenido dinámico de tu JS se inyectará aquí correctamente -->
-            <div id="tabla-presupuesto-container" class="overflow-x-auto rounded-xl border border-[#e8dbd3]">
-            </div>
-        </div>
+                    <!-- Datos del Cliente en el Documento -->
+                    <div class="text-xs text-gray-700 bg-white p-3 rounded-xl border border-[#e8dbd3] flex justify-between">
+                        <div>
+                            <span class="text-gray-500 font-semibold">Preparado para:</span> <span id="doc-cliente-nombre" class="text-[#2c2c2c] font-bold">Cliente General</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-semibold">Validez:</span> <span id="doc-validez-txt" class="text-[#2c2c2c]">7 días hábiles</span>
+                        </div>
+                    </div>
 
-    </div>
-</section>
+                    <!-- Tabla de Renglones / Ítems del Presupuesto -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Ítems, Servicios e Insumos a Presupuestar</h4>
+                            <div class="space-x-2">
+                                <button onclick="agregarRenglonServicio()" class="text-xs bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-bullhorn mr-1"></i> Añadir Servicio</button>
+                                <button onclick="agregarRenglonInsumo()" class="text-xs bg-[#b88a73] hover:bg-[#a67963] text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-box mr-1"></i> Añadir Insumo</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-gray-700">
+                                <thead class="bg-white text-gray-500 uppercase border-b border-[#e8dbd3]">
+                                    <tr>
+                                        <th class="p-2.5">Descripción / Concepto</th>
+                                        <th class="p-2.5 text-center">Cant</th>
+                                        <th class="p-2.5 text-center">Costo Unit. ($)</th>
+                                        <th class="p-2.5 text-center">% Ganancia</th>
+                                        <th class="p-2.5 text-right">Precio Sugerido ($)</th>
+                                        <th class="p-2.5 text-right font-bold text-[#b88a73]">Precio Cliente Final ($)</th>
+                                        <th class="p-2.5 text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-renglones-presupuesto">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totales y Resumen del Presupuesto -->
+                    <div class="flex justify-end pt-4 border-t border-[#e8dbd3]">
+                        <div class="w-full sm:w-72 space-y-2 text-sm bg-white p-4 rounded-xl border border-[#e8dbd3]">
+                            <div class="flex justify-between text-gray-500 text-xs">
+                                <span>Costo Total Producción:</span>
+                                <span id="doc-subtotal-costo" class="font-bold text-[#2c2c2c]">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-500 text-xs">
+                                <span>Ganancia Total Estimada:</span>
+                                <span id="doc-total-ganancia" class="font-bold text-[#b88a73]">$0.00</span>
+                            </div>
+                            <div class="flex justify-between border-t border-[#e8dbd3] pt-2 text-base font-bold text-[#2c2c2c]">
+                                <span>Total Presupuesto ($):</span>
+                                <span id="doc-total-usd" class="text-[#b88a73]">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-600 font-semibold">
+                                <span>Total en Bolívares (VES):</span>
+                                <span id="doc-total-ves">Bs. 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
 
         <!-- MÓDULO: FACTURA / CAJA Y PAGOS DESGLOSADOS -->
         <section id="module-caja" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 <div class="lg:col-span-2 space-y-4">
-                    <h2 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-cash-register text-indigo-400 mr-2"></i> Procesar Venta / Factura</h2>
+                    <h2 class="text-xl font-bold text-[#2c2c2c] flex items-center"><i class="fa-solid fa-cash-register text-[#b88a73] mr-2"></i> Procesar Venta / Factura</h2>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Seleccionar Cliente (CRM)</label>
-                            <select id="caja-cliente" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Seleccionar Cliente (CRM)</label>
+                            <select id="caja-cliente" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] focus:outline-none">
                                 <option value="Cliente General">-- Cliente General --</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Descripción del Servicio / Venta</label>
-                            <input type="text" id="caja-concepto" placeholder="Ej: Servicio de diseño y impresión" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Descripción del Servicio / Venta</label>
+                            <input type="text" id="caja-concepto" placeholder="Ej: Servicio de diseño y impresión" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] focus:outline-none focus:border-[#b88a73]">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total a Pagar ($)</label>
-                            <input type="number" id="caja-total-usd" value="50.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold" oninput="actualizarTotalesCaja()">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Total a Pagar ($)</label>
+                            <input type="number" id="caja-total-usd" value="50.00" step="0.01" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] font-bold" oninput="actualizarTotalesCaja()">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total a Pagar (Bs)</label>
-                            <input type="text" id="caja-total-ves" readonly class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-bold">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Total a Pagar (Bs)</label>
+                            <input type="text" id="caja-total-ves" readonly class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#b88a73] font-bold">
                         </div>
                     </div>
 
                     <!-- Panel de Formas de Pago Desglosadas -->
-                    <div class="mt-4 border-t border-slate-700 pt-4">
+                    <div class="mt-4 border-t border-[#e8dbd3] pt-4">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider">Desglose de Formas de Pago</h3>
-                            <button onclick="agregarMetodoPago()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-plus mr-1"></i> Añadir Método</button>
+                            <h3 class="text-sm font-bold text-[#2c2c2c] uppercase tracking-wider">Desglose de Formas de Pago</h3>
+                            <button onclick="agregarMetodoPago()" class="text-xs bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-plus mr-1"></i> Añadir Método</button>
                         </div>
 
                         <div id="lista-pagos" class="space-y-3 max-h-56 overflow-y-auto pr-1">
@@ -265,26 +271,26 @@
                 </div>
 
                 <!-- Columna Derecha: Cierre de Caja -->
-                <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 flex flex-col justify-between space-y-4">
+                <div class="bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3] flex flex-col justify-between space-y-4">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2 mb-3">Resumen de Cobro</h3>
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-[#e8dbd3] pb-2 mb-3">Resumen de Cobro</h3>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-slate-400">Total Factura:</span>
-                                <span id="resumen-total" class="font-bold text-white">$0.00</span>
+                                <span class="text-gray-500">Total Factura:</span>
+                                <span id="resumen-total" class="font-bold text-[#2c2c2c]">$0.00</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-400">Total Abonado:</span>
-                                <span id="resumen-abonado" class="font-bold text-emerald-400">$0.00</span>
+                                <span class="text-gray-500">Total Abonado:</span>
+                                <span id="resumen-abonado" class="font-bold text-[#b88a73]">$0.00</span>
                             </div>
-                            <div class="flex justify-between border-t border-slate-800 pt-2">
-                                <span class="text-slate-400">Restante / Vuelto:</span>
-                                <span id="resumen-restante" class="font-bold text-amber-400">$0.00</span>
+                            <div class="flex justify-between border-t border-[#e8dbd3] pt-2">
+                                <span class="text-gray-500">Restante / Vuelto:</span>
+                                <span id="resumen-restante" class="font-bold text-amber-600">$0.00</span>
                             </div>
                         </div>
                     </div>
 
-                    <button onclick="procesarPagoFinal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition shadow-lg flex items-center justify-center space-x-2">
+                    <button onclick="procesarPagoFinal()" class="w-full bg-[#b88a73] hover:bg-[#a67963] text-white py-3 rounded-xl font-bold transition shadow-sm flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-check-circle"></i>
                         <span>Guardar y Procesar Venta</span>
                     </button>
@@ -294,20 +300,20 @@
 
         <!-- MÓDULO: INSUMOS Y STOCK -->
         <section id="module-insumos" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-6">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-boxes-stacked text-indigo-400 mr-2"></i> Control de Insumos y Materiales</h2>
+                    <h2 class="text-xl font-bold text-[#2c2c2c]"><i class="fa-solid fa-boxes-stacked text-[#b88a73] mr-2"></i> Control de Insumos y Materiales</h2>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <input type="text" id="insumo-nombre" placeholder="Nombre del Material" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="text" id="insumo-categoria" placeholder="Categoría" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="number" id="insumo-costo" placeholder="Costo Unit. ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="number" id="insumo-stock" placeholder="Stock Actual" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <button onclick="guardarInsumo()" class="sm:col-span-4 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Registrar Insumo en Nube</button>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
+                    <input type="text" id="insumo-nombre" placeholder="Nombre del Material" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="text" id="insumo-categoria" placeholder="Categoría" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="number" id="insumo-costo" placeholder="Costo Unit. ($)" step="0.01" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="number" id="insumo-stock" placeholder="Stock Actual" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <button onclick="guardarInsumo()" class="sm:col-span-4 bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white py-2 rounded-lg font-medium transition text-sm">Registrar Insumo en Nube</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                             <tr>
                                 <th class="p-3">Nombre</th>
                                 <th class="p-3">Categoría</th>
@@ -317,7 +323,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-insumos">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-500">Sin insumos registrados.</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Sin insumos registrados.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -326,16 +332,16 @@
 
         <!-- MÓDULO: SERVICIOS -->
         <section id="module-servicios" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-bullhorn text-indigo-400 mr-2"></i> Catálogo de Servicios Publicitarios</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <input type="text" id="servicio-nombre" placeholder="Nombre del Servicio" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="number" id="servicio-precio" placeholder="Precio Base ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <button onclick="guardarServicio()" class="sm:col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Guardar Servicio en Nube</button>
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-6">
+                <h2 class="text-xl font-bold text-[#2c2c2c]"><i class="fa-solid fa-bullhorn text-[#b88a73] mr-2"></i> Catálogo de Servicios Publicitarios</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
+                    <input type="text" id="servicio-nombre" placeholder="Nombre del Servicio" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="number" id="servicio-precio" placeholder="Precio Base ($)" step="0.01" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <button onclick="guardarServicio()" class="sm:col-span-2 bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white py-2 rounded-lg font-medium transition text-sm">Guardar Servicio en Nube</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                             <tr>
                                 <th class="p-3">Servicio</th>
                                 <th class="p-3">Precio Base ($)</th>
@@ -343,7 +349,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-servicios">
-                            <tr><td colspan="3" class="p-4 text-center text-slate-500">Sin servicios registrados.</td></tr>
+                            <tr><td colspan="3" class="p-4 text-center text-gray-400">Sin servicios registrados.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -352,17 +358,17 @@
 
         <!-- MÓDULO: CRM CLIENTES -->
         <section id="module-crm" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-users text-indigo-400 mr-2"></i> Directorio de Clientes (CRM)</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <input type="text" id="cliente-nombre" placeholder="Nombre o Empresa" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="text" id="cliente-tel" placeholder="Teléfono / WhatsApp" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="text" id="cliente-insta" placeholder="Instagram" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <button onclick="guardarCliente()" class="sm:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Guardar Cliente en CRM</button>
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-6">
+                <h2 class="text-xl font-bold text-[#2c2c2c]"><i class="fa-solid fa-users text-[#b88a73] mr-2"></i> Directorio de Clientes (CRM)</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
+                    <input type="text" id="cliente-nombre" placeholder="Nombre o Empresa" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="text" id="cliente-tel" placeholder="Teléfono / WhatsApp" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="text" id="cliente-insta" placeholder="Instagram" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <button onclick="guardarCliente()" class="sm:col-span-3 bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white py-2 rounded-lg font-medium transition text-sm">Guardar Cliente en CRM</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                             <tr>
                                 <th class="p-3">Nombre / Empresa</th>
                                 <th class="p-3">Teléfono</th>
@@ -371,7 +377,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-clientes">
-                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Sin clientes registrados.</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-400">Sin clientes registrados.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -380,22 +386,22 @@
 
         <!-- MÓDULO: CONTROL FINANCIERO -->
         <section id="module-finanzas" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-wallet text-indigo-400 mr-2"></i> Control Financiero y Gastos Operativos</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <input type="text" id="gasto-concepto" placeholder="Concepto del Gasto" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="number" id="gasto-monto" placeholder="Monto ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <select id="gasto-categoria" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-6">
+                <h2 class="text-xl font-bold text-[#2c2c2c]"><i class="fa-solid fa-wallet text-[#b88a73] mr-2"></i> Control Financiero y Gastos Operativos</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
+                    <input type="text" id="gasto-concepto" placeholder="Concepto del Gasto" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <input type="number" id="gasto-monto" placeholder="Monto ($)" step="0.01" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
+                    <select id="gasto-categoria" class="bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm">
                         <option value="Operativo">Operativo (Alquiler, Servicios)</option>
                         <option value="Insumos">Compra de Insumos</option>
                         <option value="Marketing">Marketing / Publicidad</option>
                         <option value="Otros">Otros</option>
                     </select>
-                    <button onclick="guardarGasto()" class="sm:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Registrar Gasto</button>
+                    <button onclick="guardarGasto()" class="sm:col-span-3 bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white py-2 rounded-lg font-medium transition text-sm">Registrar Gasto</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                             <tr>
                                 <th class="p-3">Concepto</th>
                                 <th class="p-3">Categoría</th>
@@ -404,7 +410,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-gastos">
-                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Sin gastos registrados.</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-400">Sin gastos registrados.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -413,12 +419,12 @@
 
         <!-- MÓDULO: CONFIGURAR LOGO -->
         <section id="module-logo" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-image text-indigo-400 mr-2"></i> Configuración del Logotipo</h2>
-                <p class="text-sm text-slate-400">Sube una imagen o introduce la URL de tu logo para personalizar la esquina superior izquierda.</p>
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm space-y-4">
+                <h2 class="text-xl font-bold text-[#2c2c2c]"><i class="fa-solid fa-image text-[#b88a73] mr-2"></i> Configuración del Logotipo</h2>
+                <p class="text-sm text-gray-500">Sube una imagen o introduce la URL de tu logo para personalizar la esquina superior izquierda.</p>
                 <div class="flex items-center space-x-4">
-                    <input type="file" id="logo-file-input" accept="image/*" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-300">
-                    <button onclick="actualizarLogo()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Aplicar Logo</button>
+                    <input type="file" id="logo-file-input" accept="image/*" class="bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2 text-sm text-gray-700">
+                    <button onclick="actualizarLogo()" class="bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-4 py-2 rounded-xl text-sm font-medium transition">Aplicar Logo</button>
                 </div>
             </div>
         </section>
@@ -434,24 +440,25 @@
         let tasaBCV = 807.39;
         let listaInsumosDB = [];
         let listaServiciosDB = [];
-        let listaClientesDB = [];
 
         function switchTab(tabId) {
             ['dashboard', 'calculadora', 'caja', 'insumos', 'servicios', 'crm', 'finanzas', 'logo'].forEach(t => {
                 const el = document.getElementById(`module-${t}`);
                 const btn = document.getElementById(`tab-${t}`);
                 if(el) el.classList.add('hidden');
-                if(btn) btn.className = "px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition";
+                if(btn) btn.className = "px-4 py-2 rounded-xl font-medium text-sm text-gray-600 hover:text-[#2c2c2c] hover:bg-[#faf8f6] transition";
             });
             const activeEl = document.getElementById(`module-${tabId}`);
             const activeBtn = document.getElementById(`tab-${tabId}`);
             if(activeEl) activeEl.classList.remove('hidden');
-            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow";
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl font-medium text-sm bg-[#2c2c2c] text-white transition shadow-sm";
 
-            if(tabId === 'caja' || tabId === 'calculadora') {
+            if(tabId === 'caja') {
+                actualizarTotalesCaja();
                 cargarClientesEnSelects();
             }
             if(tabId === 'calculadora') {
+                cargarClientesEnSelects();
                 document.getElementById('presupuesto-fecha-doc').innerText = `Fecha: ${new Date().toLocaleDateString()}`;
                 document.getElementById('presupuesto-tasa-doc').innerText = `Bs. ${tasaBCV.toFixed(2)}`;
             }
@@ -495,28 +502,28 @@
             });
 
             const html = `
-                <tr id="${rowId}" class="border-b border-slate-800 renglon-item">
+                <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
                     <td class="p-2">
-                        <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full select-servicio" onchange="seleccionarServicioCatalogo('${rowId}')">
+                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full select-servicio" onchange="seleccionarServicioCatalogo('${rowId}')">
                             ${opcionesServicios}
                         </select>
-                        <input type="text" value="${nombreDefault}" placeholder="Descripción del servicio" class="mt-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full desc-input">
+                        <input type="text" value="${nombreDefault}" placeholder="Descripción del servicio" class="mt-1 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full desc-input">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" value="1" min="1" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" value="1" min="1" class="w-16 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="0.01" value="${costoDefault}" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="0.01" value="${costoDefault}" class="w-20 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="actualizarFilaPorGananciaIndividual('${rowId}')">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
+                    <td class="p-2 text-right text-[#b88a73] font-semibold sugerido-txt">$0.00</td>
                     <td class="p-2 text-right">
-                        <input type="number" step="0.01" value="0.00" class="w-24 bg-slate-800 border border-emerald-500/60 text-emerald-400 font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="0.01" value="0.00" class="w-24 bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -536,28 +543,28 @@
             });
 
             const html = `
-                <tr id="${rowId}" class="border-b border-slate-800 renglon-item">
+                <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
                     <td class="p-2">
-                        <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full select-insumo" onchange="seleccionarInsumoCatalogo('${rowId}')">
+                        <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full select-insumo" onchange="seleccionarInsumoCatalogo('${rowId}')">
                             ${opcionesInsumos}
                         </select>
-                        <input type="text" placeholder="Insumo o material" class="mt-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full desc-input">
+                        <input type="text" placeholder="Insumo o material" class="mt-1 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs w-full desc-input">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" value="1" min="1" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" value="1" min="1" class="w-16 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="0.01" value="0.00" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="0.01" value="0.00" class="w-20 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="actualizarFilaPorGananciaIndividual('${rowId}')">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
                     </td>
-                    <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
+                    <td class="p-2 text-right text-[#b88a73] font-semibold sugerido-txt">$0.00</td>
                     <td class="p-2 text-right">
-                        <input type="number" step="0.01" value="0.00" class="w-24 bg-slate-800 border border-emerald-500/60 text-emerald-400 font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="0.01" value="0.00" class="w-24 bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -587,41 +594,6 @@
             recalcularPresupuestoTotal();
         }
 
-        function actualizarFilaPorGananciaIndividual(rowId) {
-            const row = document.getElementById(rowId);
-            const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
-            const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
-            const gananciaPct = parseFloat(row.querySelector('.ganancia-input').value) || 0;
-
-            const costoTotalItem = cant * costoUnit;
-            const sugeridoItem = costoTotalItem * (1 + (gananciaPct / 100));
-            
-            row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
-            row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
-            recalcularPresupuestoTotal();
-        }
-
-    function aplicarGananciaGlobalATodo() {
-    const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 0;
-    
-    document.querySelectorAll('.renglon-item').forEach(row => {
-        const inputGananciaFila = row.querySelector('.ganancia-input');
-        if (inputGananciaFila) {
-            inputGananciaFila.value = gananciaGlobal;
-        }
-
-        const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
-        const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
-        const costoTotalItem = cant * costoUnit;
-        const sugeridoItem = costoTotalItem * (1 + (gananciaGlobal / 100));
-        
-        row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
-        row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
-    });
-    
-    recalcularPresupuestoTotal();
-}
-
         function recalcularPresupuestoTotal() {
             let subtotalCostoGlobal = 0;
             let totalGananciaGlobal = 0;
@@ -640,8 +612,11 @@
                 row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
 
                 const clienteInput = row.querySelector('.precio-cliente-input');
+                if(!clienteInput.dataset.modified) {
+                    clienteInput.value = sugeridoItem.toFixed(2);
+                }
+
                 const precioFinalItem = parseFloat(clienteInput.value) || 0;
-                
                 totalPresupuestoUSD += precioFinalItem;
                 totalGananciaGlobal += (precioFinalItem - costoTotalItem);
             });
@@ -653,304 +628,30 @@
             const totalVES = totalPresupuestoUSD * tasaBCV;
             document.getElementById('doc-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-            // Control visual de la tasa BCV en el documento PDF
-            const mostrarTasa = document.getElementById('check-mostrar-tasa').checked;
-            const contenedorTasaDoc = document.getElementById('contenedor-tasa-doc');
-            if(mostrarTasa) {
-                contenedorTasaDoc.classList.remove('hidden');
-            } else {
-                contenedorTasaDoc.classList.add('hidden');
-            }
-
-            // Actualizar nombre del cliente en el documento impreso
-            const nombreClienteInput = document.getElementById('presupuesto-cliente').value.trim();
-            document.getElementById('doc-cliente-nombre').innerText = nombreClienteInput !== '' ? nombreClienteInput : 'Cliente General';
+            const selectCliente = document.getElementById('presupuesto-cliente');
+            document.getElementById('doc-cliente-nombre').innerText = selectCliente.options[selectCliente.selectedIndex]?.text || 'Cliente General';
             document.getElementById('doc-validez-txt').innerText = document.getElementById('presupuesto-validez').value;
         }
 
-        async function agregarClienteRapidoDesdeCotizador() {
-            const nombreInput = document.getElementById('presupuesto-cliente').value.trim();
-            if(!nombreInput || nombreInput === 'Cliente General') {
-                return alert("Escribe un nombre de cliente válido para agregarlo al CRM.");
+        document.addEventListener('input', function(e) {
+            if(e.target.classList.contains('precio-cliente-input')) {
+                e.target.dataset.modified = "true";
+                recalcularPresupuestoTotal();
             }
-            if(supabaseClient) {
-                const { error } = await supabaseClient.from('clientes').insert([{ nombre: nombreInput }]);
-                if(!error) {
-                    alert(`¡Cliente "${nombreInput}" guardado en el CRM con éxito!`);
-                    cargarClientesEnSelects();
-                } else {
-                    alert("Error al guardar en el CRM (puede que ya exista).");
-                }
-            }
+        });
+
+        function exportarPDFPresupuesto() {
+            const elemento = document.getElementById('area-impresion-presupuesto');
+            const opt = {
+                margin:       0.5,
+                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().from(elemento).set(opt).save();
         }
-function exportarPDFPresupuesto() {
-    const elementoOriginal = document.getElementById('area-impresion-presupuesto');
-    const clone = document.createElement('div');
-    
-    // Estilos base para la página del cliente (Fondo blanco impecable y tipografía limpia)
-    clone.style.backgroundColor = '#ffffff';
-    clone.style.color = '#2c2c2c';
-    clone.style.padding = '40px';
-    clone.style.fontFamily = "'Inter', system-ui, -apple-system, sans-serif";
-    clone.style.boxSizing = 'border-box';
 
-    // --- 1. ENCABEZADO CON EL LOGO Y ESTILO CORPORATIVO ---
-    const headerDiv = document.createElement('div');
-    headerDiv.style.display = 'flex';
-    headerDiv.style.justifyContent = 'space-between';
-    headerDiv.style.alignItems = 'center';
-    headerDiv.style.borderBottom = '2px solid #b88a73'; // Línea fina con el color terracota del logo
-    headerDiv.style.paddingBottom = '25px';
-    headerDiv.style.marginBottom = '30px';
-
-    headerDiv.innerHTML = `
-        <div>
-            <!-- AQUÍ PUEDES USAR LA URL DE TU LOGO (o guardarlo en tu repositorio y poner su ruta) -->
-            <img src="URL_DE_TU_LOGO_AQUÍ.png" alt="LAN ESTUDIO" style="max-height: 55px; object-fit: contain; display: block; margin-bottom: 6px;">
-            <p style="font-size: 11px; color: #888888; margin: 0; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Agencia de Publicidad y Comunicación</p>
-        </div>
-        <div style="text-align: right;">
-            <h2 style="font-size: 22px; color: #2c2c2c; font-weight: 700; margin: 0; letter-spacing: 0.5px;">PRESUPUESTO</h2>
-            <p style="font-size: 12px; color: #666666; margin: 4px 0 0 0; font-weight: 500;">Fecha: ${new Date().toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-        </div>
-    `;
-    clone.appendChild(headerDiv);
-
-    // --- 2. INFORMACIÓN DEL CLIENTE ---
-    const clienteSpan = elementoOriginal.querySelector('#doc-cliente, [id*="cliente"]') || elementoOriginal.querySelector('span:contains("Preparado para")');
-    const nombreCliente = clienteSpan ? clienteSpan.innerText.replace('Preparado para:', '').trim() : 'Cliente General';
-
-    const clientBar = document.createElement('div');
-    clientBar.style.backgroundColor = '#faf8f6'; // Fondo ultra suave armonizado
-    clientBar.style.border = '1px solid #eee5e0';
-    clientBar.style.borderRadius = '6px';
-    clientBar.style.padding = '14px 20px';
-    clientBar.style.marginBottom = '30px';
-    clientBar.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11px; color: #b88a73; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Preparado para:</span>
-            <span style="font-size: 15px; color: #2c2c2c; font-weight: 600;">${nombreCliente}</span>
-        </div>
-    `;
-    clone.appendChild(clientBar);
-
-    // --- 3. TABLA DE ÍTEMS LIMPIA Y ELEGANTE ---
-    const tablaContainer = document.createElement('div');
-    tablaContainer.style.marginBottom = '40px';
-
-    // Limpiar estructura de la tabla (ocultar botones y columnas internas/BCV)
-    const elementosAOcultar = clone.querySelectorAll('button, .btn, #añadir-servicio, #añadir-insumo, .fa-trash, th:nth-of-type(3), td:nth-of-type(3), th:nth-of-type(4), td:nth-of-type(4), th:nth-of-type(5), td:nth-of-type(5), th:nth-of-type(7), td:nth-of-type(7), .text-emerald-400');
-    elementosAOcultar.forEach(el => el.remove());
-
-    let htmlTabla = `
-        <h4 style="font-size: 12px; color: #b88a73; text-transform: uppercase; margin: 0 0 12px 0; font-weight: 700; letter-spacing: 1px;">Detalle de Servicios</h4>
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead>
-                <tr style="background-color: #2c2c2c; color: #ffffff; text-align: left;">
-                    <th style="padding: 12px 15px; border-top-left-radius: 6px; font-weight: 600; letter-spacing: 0.5px;">Descripción / Concepto</th>
-                    <th style="padding: 12px 15px; text-align: center; width: 70px; font-weight: 600;">Cant</th>
-                    <th style="padding: 12px 15px; text-align: right; width: 120px; border-top-right-radius: 6px; font-weight: 600;">Precio Total</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    const tablaReal = elementoOriginal.querySelector('table');
-    let subtotalCalculado = 0;
-
-    if (tablaReal) {
-        const trs = tablaReal.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const select = tr.querySelector('select');
-            const inputCant = tr.querySelector('input[type="number"], input');
-            
-            let nombreServicio = '';
-            if (select && select.selectedIndex > 0) {
-                nombreServicio = select.options[select.selectedIndex].text.split('($)')[0]
-                                          .replace('-- Seleccionar Servicio del Catálogo --', '')
-                                          .replace('-- Seleccionar Insumo del Stock --', '')
-                                          .replace(/\(Costo:.*?\)/g, '')
-                                          .trim();
-            } else {
-                const descInput = tr.querySelector('input[type="text"]');
-                nombreServicio = descInput ? descInput.value : (tr.cells[0] ? tr.cells[0].innerText : '');
-            }
-
-            if (nombreServicio && nombreServicio !== '') {
-                const cantidad = inputCant ? parseFloat(inputCant.value) || 1 : 1;
-                
-                let precioFila = 0;
-                const inputPrecio = tr.querySelector('td:nth-last-child(2) input');
-                const spanPrecio = tr.querySelector('.precio-cliente, td:nth-last-child(2) span, td:nth-of-type(6)');
-
-                if (inputPrecio) {
-                    precioFila = parseFloat(inputPrecio.value) || 0;
-                } else if (spanPrecio) {
-                    precioFila = parseFloat(spanPrecio.innerText.replace('$', '').replace(',', '.')) || 0;
-                }
-
-                subtotalCalculado += precioFila;
-
-                htmlTabla += `
-                    <tr style="border-bottom: 1px solid #f0ede9;">
-                        <td style="padding: 14px 15px; color: #333333; font-weight: 500; line-height: 1.4;">${nombreServicio}</td>
-                        <td style="padding: 14px 15px; color: #666666; text-align: center;">${cantidad}</td>
-                        <td style="padding: 14px 15px; color: #2c2c2c; text-align: right; font-weight: 600;">$${precioFila.toFixed(2)}</td>
-                    </tr>
-                `;
-            }
-        });
-    }
-
-    htmlTabla += `
-            </tbody>
-        </table>
-    `;
-
-    tablaContainer.innerHTML = htmlTabla;
-    clone.appendChild(tablaContainer);
-
-    // --- 4. TOTAL A PAGAR RESALTADO CON EL TONO TERRACOTA DEL LOGO ---
-    let montoTotalFinal = subtotalCalculado.toFixed(2);
-    const spanTotalInterfaz = elementoOriginal.querySelector('#total-presupuesto, .text-emerald-400');
-    if (spanTotalInterfaz && spanTotalInterfaz.innerText.replace('$', '').trim() !== '0.00') {
-        montoTotalFinal = spanTotalInterfaz.innerText.replace('$', '').replace(',', '.').trim();
-    }
-
-    const totalContainer = document.createElement('div');
-    totalContainer.style.display = 'flex';
-    totalContainer.style.justifyContent = 'flex-end';
-    totalContainer.innerHTML = `
-        <div style="text-align: right; background-color: #faf8f6; border: 1px solid #e8dbd3; border-radius: 6px; padding: 15px 25px;">
-            <span style="font-size: 11px; color: #b88a73; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block;">Total a Pagar:</span>
-            <div style="font-size: 26px; font-weight: 800; color: #2c2c2c; margin-top: 4px; letter-spacing: -0.5px;">$${montoTotalFinal}</div>
-        </div>
-    `;
-    clone.appendChild(totalContainer);
-    
-    // --- 5. PIE DE PÁGINA PROFESIONAL ---
-    const footerDiv = document.createElement('div');
-    footerDiv.style.marginTop = '60px';
-    footerDiv.style.borderTop = '1px solid #eeeeee';
-    footerDiv.style.paddingTop = '20px';
-    footerDiv.style.textAlign = 'center';
-    footerDiv.style.color = '#888888';
-    footerDiv.style.fontSize = '11px';
-    footerDiv.innerHTML = `
-        <p style="margin: 0 0 4px 0; font-weight: 600; color: #555555; letter-spacing: 0.5px;">LAN ESTUDIO · Agencia de Publicidad y Comunicación</p>
-        <p style="margin: 0;">¡Gracias por confiar en nosotros!</p>
-    `;
-    clone.appendChild(footerDiv);
-
-    const opt = {
-        margin:       [0.5, 0.5, 0.5, 0.5],
-        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    html2pdf().from(clone).set(opt).save();
-}
-    // 3. Estilo corporativo limpio y fondo blanco para el PDF del cliente
-    clone.style.backgroundColor = '#ffffff';
-    clone.style.color = '#1e293b';
-    clone.style.padding = '20px';
-
-    const opt = {
-        margin:       0.5,
-        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    html2pdf().from(clone).set(opt).save();
-}
-    // Buscamos las filas reales de la tabla de la interfaz
-    const tablaReal = elementoOriginal.querySelector('table');
-    if (tablaReal) {
-        const trs = tablaReal.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const select = tr.querySelector('select');
-            const inputCant = tr.querySelector('input[type="number"], input');
-            const spanPrecioCliente = tr.querySelector('.precio-cliente, td:nth-last-child(2) span, td:nth-last-child(2) input') || tr.querySelector('td:nth-of-type(6) span, td:nth-of-type(6)');
-
-            // Obtenemos el texto limpio del servicio seleccionado
-            let nombreServicio = '';
-            if (select && select.selectedIndex > 0) {
-                nombreServicio = select.options[select.selectedIndex].text.split('($)')[0].replace('-- Seleccionar Servicio del Catálogo --', '').replace('-- Seleccionar Insumo del Stock --', '').trim();
-            } else {
-                // Si es texto plano o input de descripción
-                const descInput = tr.querySelector('input[type="text"]');
-                nombreServicio = descInput ? descInput.value : (tr.cells[0] ? tr.cells[0].innerText : '');
-            }
-
-            // Si hay un nombre de servicio válido, lo agregamos al reporte limpio
-            if (nombreServicio && nombreServicio !== '') {
-                hayItems = true;
-                const cantidad = inputCant ? inputCant.value : '1';
-                
-                // Buscamos el precio cliente visualizado en la fila
-                let precioFinal = '0.00';
-                const inputPrecio = tr.querySelector('td:nth-last-child(2) input');
-                if (inputPrecio) {
-                    precioFinal = inputPrecio.value;
-                } else if (spanPrecioCliente) {
-                    precioFinal = spanPrecioCliente.innerText || spanPrecioCliente.value || '0.00';
-                }
-
-                htmlTabla += `
-                    <tr>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; font-weight: 500;">${nombreServicio}</td>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; text-align: center;">${cantidad}</td>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a; text-align: right; font-weight: 600;">$${precioFinal}</td>
-                    </tr>
-                `;
-            }
-        });
-    }
-
-    htmlTabla += `
-            </tbody>
-        </table>
-    `;
-
-    tablaContainer.innerHTML = htmlTabla;
-    clone.appendChild(tablaContainer);
-
-    // 3. Totales limpios y profesionales abajo
-    const totalOriginal = elementoOriginal.querySelector('.total-presupuesto, .text-right:has(#total-presupuesto), div:has(> span:contains("Total Presupuesto"))') || elementoOriginal.querySelector('.flex.justify-end');
-    
-    // Obtenemos el monto total directamente de la interfaz
-    let montoTotalFinal = '0.00';
-    const spanTotalInterfaz = elementoOriginal.querySelector('#total-presupuesto, .text-emerald-400, span:contains("$")');
-    if (spanTotalInterfaz) {
-        montoTotalFinal = spanTotalInterfaz.innerText.replace('$', '').trim();
-    }
-
-    const totalContainer = document.createElement('div');
-    totalContainer.style.marginTop = '30px';
-    totalContainer.style.display = 'flex';
-    totalContainer.style.justifyContent = 'flex-end';
-    totalContainer.innerHTML = `
-        <div style="text-align: right; background: #f8fafc; padding: 15px 25px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <span style="font-size: 14px; color: #64748b; font-weight: 500;">Total Presupuesto:</span>
-            <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 4px;">$${montoTotalFinal}</div>
-        </div>
-    `;
-    clone.appendChild(totalContainer);
-
-    const opt = {
-        margin:       0.5,
-        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    html2pdf().from(clone).set(opt).save();
-}
         // --- FACTURA / CAJA CON DESGLOSE MÚLTIPLE ---
         let filasPagosCount = 0;
 
@@ -960,20 +661,20 @@ function exportarPDFPresupuesto() {
             const rowId = `pago-row-${filasPagosCount}`;
             
             const html = `
-                <div id="${rowId}" class="flex items-center space-x-2 bg-slate-900 p-2.5 rounded-xl border border-slate-700">
-                    <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none metodo-select">
+                <div id="${rowId}" class="flex items-center space-x-2 bg-white p-2.5 rounded-xl border border-[#e8dbd3]">
+                    <select class="bg-[#faf8f6] border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none metodo-select">
                         <option value="Efectivo USD">Efectivo ($)</option>
                         <option value="Pago Móvil">Pago Móvil (Bs)</option>
                         <option value="Punto de Venta">Punto de Venta (Bs)</option>
                         <option value="Zelle">Zelle ($)</option>
                         <option value="Efectivo VES">Efectivo (Bs)</option>
                     </select>
-                    <input type="number" step="0.01" placeholder="Monto" class="w-28 bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none monto-input" oninput="actualizarTotalesCaja()">
-                    <select class="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-xs moneda-select" onchange="actualizarTotalesCaja()">
+                    <input type="number" step="0.01" placeholder="Monto" class="w-28 bg-[#faf8f6] border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none monto-input" oninput="actualizarTotalesCaja()">
+                    <select class="bg-[#faf8f6] border border-[#e8dbd3] text-gray-700 rounded-lg px-2 py-1.5 text-xs moneda-select" onchange="actualizarTotalesCaja()">
                         <option value="USD">USD ($)</option>
                         <option value="VES">VES (Bs)</option>
                     </select>
-                    <button onclick="document.getElementById('${rowId}').remove(); actualizarTotalesCaja();" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="document.getElementById('${rowId}').remove(); actualizarTotalesCaja();" class="text-rose-500 hover:text-rose-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
@@ -999,13 +700,13 @@ function exportarPDFPresupuesto() {
             
             if(restante > 0.01) {
                 restanteEl.innerText = `Falta: $${restante.toFixed(2)}`;
-                restanteEl.className = "font-bold text-amber-400";
+                restanteEl.className = "font-bold text-amber-600";
             } else if(restante < -0.01) {
                 restanteEl.innerText = `Vuelto: $${Math.abs(restante).toFixed(2)}`;
-                restanteEl.className = "font-bold text-emerald-400";
+                restanteEl.className = "font-bold text-[#b88a73]";
             } else {
                 restanteEl.innerText = `$0.00 (Exacto)`;
-                restanteEl.className = "font-bold text-indigo-400";
+                restanteEl.className = "font-bold text-emerald-600";
             }
         }
 
@@ -1013,28 +714,17 @@ function exportarPDFPresupuesto() {
             if(!supabaseClient) return;
             try {
                 const { data } = await supabaseClient.from('clientes').select('*');
-                if(data) {
-                    listaClientesDB = data;
-                    // Llenar select de Caja
-                    const selectCaja = document.getElementById('caja-cliente');
-                    if(selectCaja) {
-                        const valorActual = selectCaja.value;
-                        selectCaja.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
+                const selects = [document.getElementById('caja-cliente'), document.getElementById('presupuesto-cliente')];
+                selects.forEach(select => {
+                    if(data && select) {
+                        const valorActual = select.value;
+                        select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
                         data.forEach(c => {
-                            selectCaja.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+                            select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
                         });
-                        selectCaja.value = valorActual;
+                        select.value = valorActual;
                     }
-
-                    // Llenar datalist del Cotizador
-                    const datalistCotizador = document.getElementById('crm-clientes-list');
-                    if(datalistCotizador) {
-                        datalistCotizador.innerHTML = '';
-                        data.forEach(c => {
-                            datalistCotizador.innerHTML += `<option value="${c.nombre}">`;
-                        });
-                    }
-                }
+                });
             } catch(e) { console.log(e); }
         }
 
@@ -1076,7 +766,6 @@ function exportarPDFPresupuesto() {
             cargarHistorialVentas();
         }
 
-        // --- SUPABASE CRUD CARGAS ---
         async function guardarInsumo() {
             const nombre = document.getElementById('insumo-nombre').value;
             const categoria = document.getElementById('insumo-categoria').value;
@@ -1097,9 +786,9 @@ function exportarPDFPresupuesto() {
             if(data) listaInsumosDB = data;
             const tbody = document.getElementById('tabla-insumos');
             if(data && tbody) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-slate-500">Sin insumos registrados.</td></tr>';
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Sin insumos registrados.</td></tr>';
                 data.forEach(i => {
-                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${i.nombre}</td><td class="p-3">${i.categoria || ''}</td><td class="p-3">$${i.costo_unitario}</td><td class="p-3">${i.stock}</td><td class="p-3"></td></tr>`;
+                    tbody.innerHTML += `<tr class="border-b border-[#e8dbd3]"><td class="p-3">${i.nombre}</td><td class="p-3">${i.categoria || ''}</td><td class="p-3">$${i.costo_unitario}</td><td class="p-3">${i.stock}</td><td class="p-3"></td></tr>`;
                 });
                 document.getElementById('dash-insumos').innerText = data.length;
             }
@@ -1122,9 +811,9 @@ function exportarPDFPresupuesto() {
             if(data) listaServiciosDB = data;
             const tbody = document.getElementById('tabla-servicios');
             if(data && tbody) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="3" class="p-4 text-center text-slate-500">Sin servicios registrados.</td></tr>';
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="3" class="p-4 text-center text-gray-400">Sin servicios registrados.</td></tr>';
                 data.forEach(s => {
-                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${s.nombre}</td><td class="p-3">$${s.precio}</td><td class="p-3"></td></tr>`;
+                    tbody.innerHTML += `<tr class="border-b border-[#e8dbd3]"><td class="p-3">${s.nombre}</td><td class="p-3">$${s.precio}</td><td class="p-3"></td></tr>`;
                 });
             }
         }
@@ -1146,13 +835,12 @@ function exportarPDFPresupuesto() {
             const { data } = await supabaseClient.from('clientes').select('*');
             const tbody = document.getElementById('tabla-clientes');
             if(data && tbody) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-slate-500">Sin clientes registrados.</td></tr>';
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Sin clientes registrados.</td></tr>';
                 data.forEach(c => {
-                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${c.nombre}</td><td class="p-3">${c.tel || ''}</td><td class="p-3">${c.instagram || ''}</td><td class="p-3"></td></tr>`;
+                    tbody.innerHTML += `<tr class="border-b border-[#e8dbd3]"><td class="p-3">${c.nombre}</td><td class="p-3">${c.tel || ''}</td><td class="p-3">${c.instagram || ''}</td><td class="p-3"></td></tr>`;
                 });
                 document.getElementById('dash-clientes').innerText = data.length;
             }
-            cargarClientesEnSelects();
         }
 
         async function guardarGasto() {
@@ -1172,9 +860,9 @@ function exportarPDFPresupuesto() {
             const { data } = await supabaseClient.from('gastos').select('*');
             const tbody = document.getElementById('tabla-gastos');
             if(data && tbody) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-slate-500">Sin gastos registrados.</td></tr>';
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Sin gastos registrados.</td></tr>';
                 data.forEach(g => {
-                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${g.concepto}</td><td class="p-3">${g.categoria}</td><td class="p-3">$${g.monto}</td><td class="p-3">${new Date(g.created_at).toLocaleDateString()}</td></tr>`;
+                    tbody.innerHTML += `<tr class="border-b border-[#e8dbd3]"><td class="p-3">${g.concepto}</td><td class="p-3">${g.categoria}</td><td class="p-3">$${g.monto}</td><td class="p-3">${new Date(g.created_at).toLocaleDateString()}</td></tr>`;
                 });
             }
         }
@@ -1185,7 +873,7 @@ function exportarPDFPresupuesto() {
             const tbody = document.getElementById('tabla-historial-ventas');
             let totalVentasGlobal = 0;
             if(data && tbody) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay transacciones aún.</td></tr>';
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-gray-400">No hay transacciones aún.</td></tr>';
                 data.forEach(v => {
                     totalVentasGlobal += (v.total_usd || 0);
                     let metodoTexto = v.metodo_pago;
@@ -1195,12 +883,12 @@ function exportarPDFPresupuesto() {
                     } catch(e) {}
 
                     tbody.innerHTML += `
-                        <tr class="border-b border-slate-800">
+                        <tr class="border-b border-[#e8dbd3]">
                             <td class="p-3">${new Date(v.created_at).toLocaleDateString()}</td>
-                            <td class="p-3 font-semibold text-white">${v.cliente}</td>
+                            <td class="p-3 font-semibold text-[#2c2c2c]">${v.cliente}</td>
                             <td class="p-3">${v.items}</td>
-                            <td class="p-3 text-emerald-400 font-bold">$${v.total_usd.toFixed(2)}</td>
-                            <td class="p-3 text-xs text-slate-400">${metodoTexto}</td>
+                            <td class="p-3 text-[#b88a73] font-bold">$${v.total_usd.toFixed(2)}</td>
+                            <td class="p-3 text-xs text-gray-500">${metodoTexto}</td>
                         </tr>
                     `;
                 });
@@ -1213,7 +901,7 @@ function exportarPDFPresupuesto() {
             if(input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}" class="w-8 h-8 object-cover rounded-lg">`;
+                    document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}" class="w-8 h-8 object-cover rounded-xl">`;
                     alert("¡Logo actualizado con éxito!");
                 }
                 reader.readAsDataURL(input.files[0]);
@@ -1229,7 +917,7 @@ function exportarPDFPresupuesto() {
             await cargarClientes();
             await cargarGastos();
             await cargarHistorialVentas();
-            agregarRenglonServicio(); // Iniciar con una línea de ejemplo
+            agregarRenglonServicio();
         };
     </script>
 </body>
