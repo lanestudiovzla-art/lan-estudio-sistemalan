@@ -3,974 +3,685 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAN ESTUDIO - Sistema de Gestión y Cotización</title>
+    <title>LAN Estudio - Sistema Integral de Gestión</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; line-height: 1.25; background-color: #f8fafc; color: #1e293b; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div id="logoContainer" class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-xl uppercase tracking-wider overflow-hidden">
-                    LAN
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight">LAN ESTUDIO</h1>
-                    <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
-                </div>
+    <!-- Topbar con Barra de Tasa BCV Automática y Logo -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex flex-wrap justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <div id="logo-container" class="bg-indigo-600 p-2 rounded-lg text-white font-bold text-xl flex items-center justify-center">
+                <i class="fa-solid fa-layer-group"></i>
             </div>
-            <div class="flex items-center gap-6 text-sm">
-                <div id="liveClock" class="bg-slate-800 px-3 py-1.5 rounded-md text-slate-300">Cargando fecha...</div>
-                <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-md">
-                    <span class="text-xs text-slate-400">Tasa BCV ($):</span>
-                    <input type="number" id="bcvRate" value="36.50" step="0.01" class="w-20 bg-slate-700 text-white text-right px-2 py-0.5 rounded outline-none focus:ring-1 focus:ring-indigo-500">
-                </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide">LAN Estudio</h1>
+                <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="bg-slate-800 border-t border-slate-700 overflow-x-auto">
-            <div class="max-w-7xl mx-auto px-4 flex gap-1 py-2 text-sm font-medium whitespace-nowrap">
-                <button onclick="switchTab('dashboard', this)" class="tab-btn px-4 py-2 rounded-md bg-indigo-600 text-white transition hover:bg-indigo-500"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
-                <button onclick="switchTab('insumos', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Materiales</button>
-                <button onclick="switchTab('servicios', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios Publicitarios</button>
-                <button onclick="switchTab('calculadora', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotización</button>
-                <button onclick="switchTab('facturacion', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-cash-register mr-2"></i>Facturación / Caja</button>
-                <button onclick="switchTab('crm', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
-                <button onclick="switchTab('config', this)" class="tab-btn px-4 py-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-solid fa-gear mr-2"></i>Configurar Logo</button>
+        <!-- Indicador Tasa BCV Automática -->
+        <div class="flex items-center space-x-4 mt-2 sm:mt-0 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-700">
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs text-slate-300 font-medium">Tasa BCV Oficial:</span>
+                <span id="bcv-rate-display" class="text-sm font-bold text-emerald-400">Cargando...</span>
             </div>
-        </nav>
+            <button onclick="fetchBCVRate()" title="Actualizar Tasa BCV" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded transition">
+                <i class="fa-solid fa-sync"></i>
+            </button>
+        </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+    <!-- Navegación General de Módulos -->
+    <nav class="bg-slate-800/60 border-b border-slate-700 px-6 py-2 flex space-x-2 overflow-x-auto">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+        <button onclick="switchTab('calculadora')" id="tab-calculadora" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotizador</button>
+        <button onclick="switchTab('caja')" id="tab-caja" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-cash-register mr-2"></i>Factura / Caja y Pagos</button>
+        <button onclick="switchTab('insumos')" id="tab-insumos" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Stock</button>
+        <button onclick="switchTab('servicios')" id="tab-servicios" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios</button>
+        <button onclick="switchTab('crm')" id="tab-crm" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-users mr-2"></i>CRM Clientes</button>
+        <button onclick="switchTab('finanzas')" id="tab-finanzas" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-wallet mr-2"></i>Control Financiero</button>
+        <button onclick="switchTab('logo')" id="tab-logo" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-image mr-2"></i>Configurar Logo</button>
+    </nav>
 
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="tab-content active space-y-6">
-            <h2 class="text-2xl font-bold text-slate-800">Panel General - LAN Estudio</h2>
+    <!-- Contenedor Principal de Módulos -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+        
+        <!-- MÓDULO: DASHBOARD -->
+        <section id="module-dashboard" class="space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-sm text-slate-500">Ventas Totales</p>
-                    <h3 id="dashVentas" class="text-2xl font-bold text-indigo-600 mt-1">$0.00</h3>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Ventas Totales</p>
+                    <h3 id="dash-ventas" class="text-2xl font-bold text-emerald-400 mt-2">$0.00</h3>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-sm text-slate-500">Insumos Registrados</p>
-                    <h3 id="dashInsumos" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Insumos Registrados</p>
+                    <h3 id="dash-insumos" class="text-2xl font-bold text-indigo-400 mt-2">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-sm text-slate-500">Insumos en Alerta (Stock Bajo)</p>
-                    <h3 id="dashAlerta" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Clientes en CRM</p>
+                    <h3 id="dash-clientes" class="text-2xl font-bold text-sky-400 mt-2">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-sm text-slate-500">Servicios Activos</p>
-                    <h3 id="dashServicios" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                    <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Insumos Bajos (Alerta)</p>
+                    <h3 id="dash-alertas" class="text-2xl font-bold text-rose-400 mt-2">0</h3>
+                </div>
+            </div>
+            
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-indigo-400"></i> Historial Reciente de Transacciones</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Fecha</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Concepto</th>
+                                <th class="p-3">Total</th>
+                                <th class="p-3">Métodos de Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-historial-ventas">
+                            <tr><td colspan="5" class="p-4 text-center text-slate-500">Cargando registros...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <!-- INSUMOS Y MATERIALES -->
-        <section id="insumos" class="tab-content space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-slate-800">Control de Insumos y Materiales</h2>
-                <button onclick="openInsumoModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Insumo</button>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">Categoría</th>
-                            <th class="p-3 font-semibold">Costo ($)</th>
-                            <th class="p-3 font-semibold">Costo Unit. ($)</th>
-                            <th class="p-3 font-semibold">Precio ($)</th>
-                            <th class="p-3 font-semibold">Stock Actual</th>
-                            <th class="p-3 font-semibold">Stock Mínimo</th>
-                            <th class="p-3 font-semibold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaInsumosBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="7" class="p-4 text-center text-slate-400">Cargando insumos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- SERVICIOS PUBLICITARIOS -->
-        <section id="servicios" class="tab-content space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-slate-800">Servicios Publicitarios y Diseño Digital</h2>
-                <button onclick="openServicioModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Servicio</button>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">Nombre del Servicio</th>
-                            <th class="p-3 font-semibold text-right">Precio Venta ($)</th>
-                            <th class="p-3 font-semibold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaServiciosBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="3" class="p-4 text-center text-slate-400">Cargando servicios...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- CALCULADORA Y COTIZACIÓN -->
-        <section id="calculadora" class="tab-content space-y-6">
-            <h2 class="text-2xl font-bold text-slate-800">Calculadora y Cotizador de Servicios y Materiales</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-b pb-2">1. Datos del Proyecto / Cliente</h3>
+        <!-- MÓDULO: CALCULADORA Y COTIZADOR (MEJORADO CON PRECIO CLIENTE Y DOBLE VÍA) -->
+        <section id="module-calculadora" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mr-2"></i> Simulador de Precios y Ganancias</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Cliente para la Cotización</label>
-                        <select id="cotClienteSelect" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500">
-                            <option value="">-- Seleccionar Cliente --</option>
-                        </select>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Costo Total Insumos / Producción ($)</label>
+                        <input type="number" id="calc-costo" value="10.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" oninput="calcularPreciosPorGanancia()">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Descripción del Trabajo</label>
-                        <input type="text" id="cotProyectoNombre" placeholder="Ej. Campaña Publicitaria Redes" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Porcentaje de Ganancia (%)</label>
+                        <input type="number" id="calc-ganancia" value="30" step="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" oninput="calcularPreciosPorGanancia()">
                     </div>
-                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos</h3>
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
-                        <div class="flex gap-2">
-                            <select id="cotInsumoSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
-                                <option value="">-- Seleccionar Insumo --</option>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Precio Sugerido Sistema ($)</label>
+                        <input type="text" id="calc-sugerido" readonly class="w-full bg-slate-900/50 border border-slate-700/60 rounded-xl px-4 py-2.5 text-indigo-300 font-bold">
+                    </div>
+                </div>
+
+                <!-- Nuevo Renglón: Precio Cliente y Conversión BCV -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2"><i class="fa-solid fa-tag mr-1"></i> Precio Cliente / Venta Final ($)</label>
+                        <input type="number" id="calc-precio-cliente" value="13.00" step="0.01" class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-4 py-3 text-white font-bold text-lg focus:outline-none focus:border-emerald-500" oninput="calcularPreciosPorCliente()">
+                        <p class="text-xs text-slate-400 mt-1">Modifica este campo libremente; recalculará la ganancia de forma inversa.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Equivalente en Bolívares (Tasa BCV)</label>
+                        <div id="calc-total-ves" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-emerald-400 font-bold text-lg flex items-center">
+                            Bs. 0.00
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Calculado automáticamente con la tasa oficial actual.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO: FACTURA / CAJA Y PAGOS DESGLOSADOS -->
+        <section id="module-caja" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <div class="lg:col-span-2 space-y-4">
+                    <h2 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-cash-register text-indigo-400 mr-2"></i> Procesar Venta / Factura</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Seleccionar Cliente (CRM)</label>
+                            <select id="caja-cliente" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                                <option value="Cliente General">-- Cliente General --</option>
                             </select>
-                            <input type="number" id="cotInsumoCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
-                            <button onclick="agregarInsumoACotizacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Descripción del Servicio / Venta</label>
+                            <input type="text" id="caja-concepto" placeholder="Ej: Servicio de diseño y impresión" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Servicio</label>
-                        <div class="flex gap-2">
-                            <select id="cotServicioSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
-                                <option value="">-- Seleccionar Servicio --</option>
-                            </select>
-                            <input type="number" id="cotServicioCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
-                            <button onclick="agregarServicioACotizacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total a Pagar ($)</label>
+                            <input type="number" id="caja-total-usd" value="50.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold" oninput="actualizarTotalesCaja()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total a Pagar (Bs)</label>
+                            <input type="text" id="caja-total-ves" readonly class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-bold">
+                        </div>
+                    </div>
+
+                    <!-- Panel de Formas de Pago Desglosadas -->
+                    <div class="mt-4 border-t border-slate-700 pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider">Desglose de Formas de Pago</h3>
+                            <button onclick="agregarMetodoPago()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-plus mr-1"></i> Añadir Método</button>
+                        </div>
+
+                        <div id="lista-pagos" class="space-y-3 max-h-56 overflow-y-auto pr-1">
+                            <!-- Filas inyectadas por JS -->
                         </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <!-- Columna Derecha: Cierre de Caja -->
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 flex flex-col justify-between space-y-4">
                     <div>
-                        <div class="flex justify-between items-center border-b pb-4 mb-4">
-                            <div>
-                                <h3 class="font-bold text-xl text-slate-900">PRESUPUESTO / COTIZACIÓN</h3>
-                                <p class="text-xs text-slate-500">LAN ESTUDIO - Agencia de Publicidad y Comunicación</p>
+                        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2 mb-3">Resumen de Cobro</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Total Factura:</span>
+                                <span id="resumen-total" class="font-bold text-white">$0.00</span>
                             </div>
-                            <div class="text-right text-xs text-slate-500">
-                                <p id="cotFechaActual">Fecha: --/--/----</p>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Total Abonado:</span>
+                                <span id="resumen-abonado" class="font-bold text-emerald-400">$0.00</span>
                             </div>
-                        </div>
-                        <div id="cotClienteInfo" class="mb-4 text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">
-                            <strong>Cliente:</strong> <span id="previewClienteNombre">No seleccionado</span><br>
-                            <strong>Proyecto:</strong> <span id="previewProyectoNombre">Sin especificar</span>
-                        </div>
-                        <div class="overflow-x-auto mb-4">
-                            <table class="w-full text-left text-sm">
-                                <thead>
-                                    <tr class="border-b text-slate-600">
-                                        <th class="py-2">Descripción / Ítem</th>
-                                        <th class="py-2 text-center">Cant.</th>
-                                        <th class="py-2 text-right">Precio Unit. ($)</th>
-                                        <th class="py-2 text-right">Subtotal ($)</th>
-                                        <th class="py-2 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cotItemsBody" class="divide-y divide-slate-100">
-                                    <tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>
-                                </tbody>
-                            </table>
+                            <div class="flex justify-between border-t border-slate-800 pt-2">
+                                <span class="text-slate-400">Restante / Vuelto:</span>
+                                <span id="resumen-restante" class="font-bold text-amber-400">$0.00</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="border-t pt-4 space-y-4">
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="font-medium text-slate-600">Costo Base Acumulado:</span>
-                            <span id="cotCostoBase" class="font-bold text-slate-800">$0.00</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <label for="cotMargen" class="font-medium text-slate-600">Margen de Ganancia Deseado (%):</label>
-                            <input type="number" id="cotMargen" value="30" oninput="calcularTotalesCotizacion()" class="w-24 border border-slate-300 rounded-lg p-1 text-right text-sm">
-                        </div>
-                        <div class="flex justify-between items-center text-sm bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                            <span class="font-bold text-indigo-900">Precio Sugerido / Final Editable ($):</span>
-                            <input type="number" id="cotPrecioEditable" value="0.00" step="0.01" class="w-32 border border-indigo-300 rounded-lg p-1.5 text-right font-bold text-indigo-700 text-lg bg-white">
-                        </div>
-                        <div class="flex justify-between items-center text-sm text-slate-500">
-                            <span>Total en Bolívares (Tasa BCV):</span>
-                            <span id="cotTotalBs" class="font-bold">Bs. 0.00</span>
-                        </div>
-                        <div class="flex justify-end gap-3 pt-2">
-                            <button onclick="enviarCotizacionAFacturacion()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500 transition"><i class="fa-solid fa-cart-shopping mr-2"></i>Enviar a Facturación</button>
-                            <button onclick="generarPDFCotizacion()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-file-pdf mr-2"></i>Exportar Cotización PDF</button>
-                        </div>
-                    </div>
+
+                    <button onclick="procesarPagoFinal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition shadow-lg flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Guardar y Procesar Venta</span>
+                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- FACTURACIÓN / CAJA -->
-        <section id="facturacion" class="tab-content space-y-6">
-            <h2 class="text-2xl font-bold text-slate-800">Facturación y Venta de Servicios / Insumos</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-b pb-2">1. Seleccionar Cliente</h3>
-                    <select id="factClienteSelect" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
-                        <option value="">-- Seleccionar Cliente --</option>
+        <!-- MÓDULO: INSUMOS Y STOCK -->
+        <section id="module-insumos" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-boxes-stacked text-indigo-400 mr-2"></i> Control de Insumos y Materiales</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="insumo-nombre" placeholder="Nombre del Material" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="text" id="insumo-categoria" placeholder="Categoría" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="number" id="insumo-costo" placeholder="Costo Unit. ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="number" id="insumo-stock" placeholder="Stock Actual" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <button onclick="guardarInsumo()" class="sm:col-span-4 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Registrar Insumo en Nube</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Nombre</th>
+                                <th class="p-3">Categoría</th>
+                                <th class="p-3">Costo ($)</th>
+                                <th class="p-3">Stock</th>
+                                <th class="p-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-insumos">
+                            <tr><td colspan="5" class="p-4 text-center text-slate-500">Sin insumos registrados.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO: SERVICIOS -->
+        <section id="module-servicios" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-bullhorn text-indigo-400 mr-2"></i> Catálogo de Servicios Publicitarios</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="servicio-nombre" placeholder="Nombre del Servicio" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="number" id="servicio-precio" placeholder="Precio Venta ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <button onclick="guardarServicio()" class="sm:col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Guardar Servicio en Nube</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Servicio</th>
+                                <th class="p-3">Precio ($)</th>
+                                <th class="p-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-servicios">
+                            <tr><td colspan="3" class="p-4 text-center text-slate-500">Sin servicios registrados.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO: CRM CLIENTES -->
+        <section id="module-crm" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-users text-indigo-400 mr-2"></i> Directorio de Clientes (CRM)</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="cliente-nombre" placeholder="Nombre o Empresa" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="text" id="cliente-tel" placeholder="Teléfono / WhatsApp" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="text" id="cliente-insta" placeholder="Instagram" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <button onclick="guardarCliente()" class="sm:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Guardar Cliente en CRM</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Nombre / Empresa</th>
+                                <th class="p-3">Teléfono</th>
+                                <th class="p-3">Instagram</th>
+                                <th class="p-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-clientes">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Sin clientes registrados.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO: CONTROL FINANCIERO -->
+        <section id="module-finanzas" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-wallet text-indigo-400 mr-2"></i> Control Financiero y Gastos Operativos</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="gasto-concepto" placeholder="Concepto del Gasto" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="number" id="gasto-monto" placeholder="Monto ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <select id="gasto-categoria" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                        <option value="Operativo">Operativo (Alquiler, Servicios)</option>
+                        <option value="Insumos">Compra de Insumos</option>
+                        <option value="Marketing">Marketing / Publicidad</option>
+                        <option value="Otros">Otros</option>
                     </select>
-                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">2. Agregar Elementos al Ticket</h3>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Insumo</label>
-                        <div class="flex gap-2">
-                            <select id="factInsumoSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
-                                <option value="">-- Seleccionar Insumo --</option>
-                            </select>
-                            <input type="number" id="factInsumoCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
-                            <button onclick="agregarInsumoAFacturacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Seleccionar Servicio</label>
-                        <div class="flex gap-2">
-                            <select id="factServicioSelect" class="flex-grow border border-slate-300 rounded-lg p-2 text-sm">
-                                <option value="">-- Seleccionar Servicio --</option>
-                            </select>
-                            <input type="number" id="factServicioCant" value="1" min="1" class="w-16 border border-slate-300 rounded-lg p-2 text-sm text-center">
-                            <button onclick="agregarServicioAFacturacion()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700">Añadir</button>
-                        </div>
-                    </div>
-                    <h3 class="font-bold text-slate-800 border-b pb-2 pt-2">Resumen del Ticket</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="border-b text-slate-600">
-                                    <th class="py-2">Descripción</th>
-                                    <th class="py-2 text-center">Cant.</th>
-                                    <th class="py-2 text-right">Subtotal ($)</th>
-                                    <th class="py-2 text-right">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="factItemsBody" class="divide-y divide-slate-100">
-                                <tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <button onclick="guardarGasto()" class="sm:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Registrar Gasto</button>
                 </div>
-
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 flex flex-col justify-between">
-                    <div class="space-y-4">
-                        <h3 class="font-bold text-slate-800 border-b pb-2">3. Método de Pago y Total</h3>
-                        <div class="flex flex-col gap-2 text-sm">
-                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Divisas (Efectivo / Zelle)" checked> Divisas (Efectivo / Zelle)</label>
-                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Pago Móvil / Punto de Venta"> Pago Móvil / Punto de Venta</label>
-                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Cashea (Financiamiento)"> Cashea (Financiamiento)</label>
-                            <label class="flex items-center gap-2"><input type="radio" name="metodoPago" value="Transferencia Bancaria"> Transferencia Bancaria</label>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl space-y-2">
-                            <div class="flex justify-between text-lg font-bold">
-                                <span>Total Dólares:</span>
-                                <span id="factTotalDolares" class="text-indigo-600">$0.00</span>
-                            </div>
-                            <div class="flex justify-between text-sm text-slate-500">
-                                <span>Total Bolívares (BCV):</span>
-                                <span id="factTotalBs">Bs. 0.00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="procesarFactura()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-500 transition">Procesar Venta y Descargar Insumos</button>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Concepto</th>
+                                <th class="p-3">Categoría</th>
+                                <th class="p-3">Monto ($)</th>
+                                <th class="p-3">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-gastos">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Sin gastos registrados.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <!-- CRM CLIENTES -->
-        <section id="crm" class="tab-content space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-slate-800">Directorio de Clientes CRM</h2>
-                <button onclick="openClienteModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition"><i class="fa-solid fa-plus mr-2"></i>Nuevo Cliente</button>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                            <th class="p-3 font-semibold">Cédula / RIF</th>
-                            <th class="p-3 font-semibold">Nombre / Empresa</th>
-                            <th class="p-3 font-semibold">Teléfono</th>
-                            <th class="p-3 font-semibold">Instagram</th>
-                            <th class="p-3 font-semibold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaClientesBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando clientes...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- CONFIGURAR LOGO -->
-        <section id="config" class="tab-content space-y-6">
-            <h2 class="text-2xl font-bold text-slate-800">Configuración del Logotipo</h2>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-md space-y-4">
-                <label class="block text-sm font-medium text-slate-700">Cargar o Cambiar Logo de la Agencia (Imagen PNG/JPG)</label>
-                <input type="file" id="logoInput" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                <button onclick="guardarLogo()" class="w-full bg-slate-900 text-white py-2 rounded-lg text-sm hover:bg-slate-800 transition">Actualizar Logo en la Nube</button>
+        <!-- MÓDULO: CONFIGURAR LOGO -->
+        <section id="module-logo" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-image text-indigo-400 mr-2"></i> Configuración del Logotipo</h2>
+                <p class="text-sm text-slate-400">Sube una imagen o introduce la URL de tu logo para personalizar la esquina superior izquierda.</p>
+                <div class="flex items-center space-x-4">
+                    <input type="file" id="logo-file-input" accept="image/*" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-300">
+                    <button onclick="actualizarLogo()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Aplicar Logo</button>
+                </div>
             </div>
         </section>
 
     </main>
 
-    <!-- MODAL INSUMO -->
-    <div id="insumoModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 id="insumoModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Insumo</h3>
-            <input type="hidden" id="insumoEditId">
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
-                <input type="text" id="insumoCat" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Papelería">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo ($)</label>
-                    <input type="number" id="insumoCosto" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Costo Unitario ($)</label>
-                    <input type="number" id="insumoCostoUnitario" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Precio ($)</label>
-                    <input type="number" id="insumoPrecio" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Stock Actual</label>
-                    <input type="number" id="insumoStock" class="w-full border rounded-lg p-2 text-sm" placeholder="0">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Stock Mínimo</label>
-                    <input type="number" id="insumoMinimo" class="w-full border rounded-lg p-2 text-sm" placeholder="0">
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeInsumoModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
-                <button onclick="guardarInsumo()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Insumo</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SERVICIO -->
-    <div id="servicioModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 id="servicioModalTitle" class="text-lg font-bold text-slate-800">Registrar Servicio Publicitario</h3>
-            <input type="hidden" id="servicioEditId">
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Nombre del Servicio</label>
-                <input type="text" id="servNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. Diseño de Logo">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Precio de Venta ($)</label>
-                <input type="number" id="servPrecio" step="0.01" class="w-full border rounded-lg p-2 text-sm" placeholder="0.00">
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeServicioModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
-                <button onclick="guardarServicio()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Servicio</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CLIENTE -->
-    <div id="clienteModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 id="clienteModalTitle" class="text-lg font-bold text-slate-800">Registrar Nuevo Cliente</h3>
-            <input type="hidden" id="clienteEditId">
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Cédula o RIF</label>
-                <input type="text" id="cliCedula" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. V-18799431">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Nombre o Empresa</label>
-                <input type="text" id="cliNombre" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. LEILA HATEM">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Teléfono</label>
-                <input type="text" id="cliTel" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. 04127618783">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Instagram</label>
-                <input type="text" id="cliInstagram" class="w-full border rounded-lg p-2 text-sm" placeholder="Ej. @leilahatem">
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeClienteModal()" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Cancelar</button>
-                <button onclick="guardarCliente()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-500">Guardar Cliente</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Script Lógico Integral (Supabase + Funciones) -->
     <script>
-        // ==========================================
-        // CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
-        // ==========================================
-     const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Configuración de Supabase (Sustituye con tus credenciales si es necesario)
+        const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
+        const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-let db = {
-    insumos: [],
-    servicios: [],
-    clientes: [],
-    ventas: [],
-    logo: ''
-};
+        let tasaBCV = 807.39;
 
-let cotizacionActualItems = [];
-let facturaActualItems = [];
-        async function cargarDatosRemotos() {
-            try {
-                const [resIns, resServ, resCli, resVentas, resConfig] = await Promise.all([
-                    supabaseClient.from('insumos').select('*'),
-                    supabaseClient.from('servicios').select('*'),
-                    supabaseClient.from('clientes').select('*'),
-                    supabaseClient.from('ventas').select('*'),
-                    supabaseClient.from('configuracion').select('*').eq('clave', 'logo').maybeSingle()
-                ]);
-
-                if(resIns.data) db.insumos = resIns.data;
-                if(resServ.data) db.servicios = resServ.data;
-                if(resCli.data) db.clientes = resCli.data;
-                if(resVentas.data) db.ventas = resVentas.data;
-                
-                if(resConfig.data && resConfig.data.valor) {
-                    db.logo = resConfig.data.valor;
-                    document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
-                }
-
-                actualizarDashboard();
-                renderTablas();
-                renderSelects();
-            } catch (error) {
-                console.error("Error al conectar con Supabase:", error);
-            }
-        }
-
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('liveClock').innerText = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-            document.getElementById('cotFechaActual').innerText = 'Fecha: ' + now.toLocaleDateString();
-        }, 1000);
-
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('bg-indigo-600', 'text-white');
-                el.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+        function switchTab(tabId) {
+            ['dashboard', 'calculadora', 'caja', 'insumos', 'servicios', 'crm', 'finanzas', 'logo'].forEach(t => {
+                const el = document.getElementById(`module-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if(el) el.classList.add('hidden');
+                if(btn) btn.className = "px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition";
             });
-            document.getElementById(tabId).classList.add('active');
-            if (btnElement) {
-                btnElement.classList.add('bg-indigo-600', 'text-white');
-                btnElement.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            const activeEl = document.getElementById(`module-${tabId}`);
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if(activeEl) activeEl.classList.remove('hidden');
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow";
+
+            if(tabId === 'caja') {
+                actualizarTotalesCaja();
+                cargarClientesEnCaja();
             }
         }
 
- async function guardarLogo() {
-    const fileInput = document.getElementById('logoInput');
-    if(fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const base64Logo = e.target.result;
-            
-            // Forzar el upsert indicando la columna clave
-            const { error } = await supabaseClient
-                .from('configuracion')
-                .upsert(
-                    { id: 1, clave: 'logo', valor: base64Logo },
-                    { onConflict: 'clave' }
-                );
+        async function fetchBCVRate() {
+            const display = document.getElementById('bcv-rate-display');
+            display.innerText = "Consultando...";
+            try {
+                const response = await fetch('https://rates.dolarvzla.com/bcv/current.json');
+                if(response.ok) {
+                    const data = await response.json();
+                    if(data.usd) {
+                        tasaBCV = parseFloat(data.usd);
+                        display.innerText = `Bs. ${tasaBCV.toFixed(2)}`;
+                        calcularPreciosPorGanancia();
+                        return;
+                    }
+                }
+                throw new Error("Respuesta inválida");
+            } catch (error) {
+                display.innerText = `Bs. ${tasaBCV.toFixed(2)} (Ref)`;
+                calcularPreciosPorGanancia();
+            }
+        }
 
-            if (error) {
-                console.error("Error al guardar:", error);
-                alert("Error de base de datos: " + error.message);
+        // Calculadora Doble Vía
+        function calcularPreciosPorGanancia() {
+            const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
+            const gananciaPct = parseFloat(document.getElementById('calc-ganancia').value) || 0;
+            
+            const sugerido = costo * (1 + (gananciaPct / 100));
+            document.getElementById('calc-sugerido').value = `$${sugerido.toFixed(2)}`;
+            document.getElementById('calc-precio-cliente').value = sugerido.toFixed(2);
+
+            actualizarBolivaresCalculadora(sugerido);
+        }
+
+        function calcularPreciosPorCliente() {
+            const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
+            const precioCliente = parseFloat(document.getElementById('calc-precio-cliente').value) || 0;
+
+            if(costo > 0) {
+                const nuevaGananciaPct = ((precioCliente - costo) / costo) * 100;
+                document.getElementById('calc-ganancia').value = nuevaGananciaPct.toFixed(1);
+            }
+            actualizarBolivaresCalculadora(precioCliente);
+        }
+
+        function actualizarBolivaresCalculadora(montoUSD) {
+            const totalVES = montoUSD * tasaBCV;
+            document.getElementById('calc-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Factura / Caja con Desglose Múltiple
+        let filasPagosCount = 0;
+
+        function agregarMetodoPago() {
+            filasPagosCount++;
+            const container = document.getElementById('lista-pagos');
+            const rowId = `pago-row-${filasPagosCount}`;
+            
+            const html = `
+                <div id="${rowId}" class="flex items-center space-x-2 bg-slate-900 p-2.5 rounded-xl border border-slate-700">
+                    <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none metodo-select">
+                        <option value="Efectivo USD">Efectivo ($)</option>
+                        <option value="Pago Móvil">Pago Móvil (Bs)</option>
+                        <option value="Punto de Venta">Punto de Venta (Bs)</option>
+                        <option value="Zelle">Zelle ($)</option>
+                        <option value="Efectivo VES">Efectivo (Bs)</option>
+                    </select>
+                    <input type="number" step="0.01" placeholder="Monto" class="w-28 bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none monto-input" oninput="actualizarTotalesCaja()">
+                    <select class="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-xs moneda-select" onchange="actualizarTotalesCaja()">
+                        <option value="USD">USD ($)</option>
+                        <option value="VES">VES (Bs)</option>
+                    </select>
+                    <button onclick="document.getElementById('${rowId}').remove(); actualizarTotalesCaja();" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            actualizarTotalesCaja();
+        }
+
+        function actualizarTotalesCaja() {
+            const totalUSD = parseFloat(document.getElementById('caja-total-usd').value) || 0;
+            const totalVES = totalUSD * tasaBCV;
+            document.getElementById('caja-total-ves').value = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('resumen-total').innerText = `$${totalUSD.toFixed(2)}`;
+
+            let totalAbonadoUSD = 0;
+            document.querySelectorAll('#lista-pagos > div').forEach(fila => {
+                const monto = parseFloat(fila.querySelector('.monto-input').value) || 0;
+                const moneda = fila.querySelector('.moneda-select').value;
+                totalAbonadoUSD += (moneda === 'VES') ? (monto / tasaBCV) : monto;
+            });
+
+            document.getElementById('resumen-abonado').innerText = `$${totalAbonadoUSD.toFixed(2)}`;
+            const restante = totalUSD - totalAbonadoUSD;
+            const restanteEl = document.getElementById('resumen-restante');
+            
+            if(restante > 0.01) {
+                restanteEl.innerText = `Falta: $${restante.toFixed(2)}`;
+                restanteEl.className = "font-bold text-amber-400";
+            } else if(restante < -0.01) {
+                restanteEl.innerText = `Vuelto: $${Math.abs(restante).toFixed(2)}`;
+                restanteEl.className = "font-bold text-emerald-400";
+            } else {
+                restanteEl.innerText = `$0.00 (Exacto)`;
+                restanteEl.className = "font-bold text-indigo-400";
+            }
+        }
+
+        async function cargarClientesEnCaja() {
+            if(!supabaseClient) return;
+            try {
+                const { data } = await supabaseClient.from('clientes').select('*');
+                const select = document.getElementById('caja-cliente');
+                if(data && select) {
+                    select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
+                    data.forEach(c => {
+                        select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+                    });
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        async function procesarPagoFinal() {
+            const cliente = document.getElementById('caja-cliente').value;
+            const concepto = document.getElementById('caja-concepto').value;
+            const totalUSD = parseFloat(document.getElementById('caja-total-usd').value) || 0;
+            
+            if(!concepto) {
+                alert("Por favor ingresa la descripción del servicio o producto.");
                 return;
             }
 
-            db.logo = base64Logo;
-            document.getElementById('logoContainer').innerHTML = '<img src="' + db.logo + '" class="w-full h-full object-cover">';
+            const detallePagos = [];
+            document.querySelectorAll('#lista-pagos > div').forEach(fila => {
+                detallePagos.push({
+                    metodo: fila.querySelector('.metodo-select').value,
+                    monto: parseFloat(fila.querySelector('.monto-input').value) || 0,
+                    moneda: fila.querySelector('.moneda-select').value
+                });
+            });
 
-            alert('¡Logo guardado con éxito!');
-            
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        }
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-} function openInsumoModal(id = null) {
-            document.getElementById('insumoEditId').value = id || '';
-            if(id) {
-                const item = db.insumos.find(i => i.id == id);
-                document.getElementById('insumoModalTitle').innerText = 'Editar Insumo';
-                document.getElementById('insumoCat').value = item.categoria || '';
-                document.getElementById('insumoCosto').value = item.costo || '';
-                document.getElementById('insumoCostoUnitario').value = item.costo_unitario || '';
-                document.getElementById('insumoPrecio').value = item.precio || '';
-                document.getElementById('insumoStock').value = item.stock || '';
-                document.getElementById('insumoMinimo').value = item.stock_minimo || '';
-            } else {
-                document.getElementById('insumoModalTitle').innerText = 'Registrar Nuevo Insumo';
-                document.getElementById('insumoCat').value = '';
-                document.getElementById('insumoCosto').value = '';
-                document.getElementById('insumoCostoUnitario').value = '';
-                document.getElementById('insumoPrecio').value = '';
-                document.getElementById('insumoStock').value = '';
-                document.getElementById('insumoMinimo').value = '';
+            if(detallePagos.length === 0) {
+                alert("Debes agregar al menos un método de pago.");
+                return;
             }
-            document.getElementById('insumoModal').classList.remove('hidden');
-            document.getElementById('insumoModal').classList.add('flex');
+
+            if(supabaseClient) {
+                await supabaseClient.from('ventas').insert([{
+                    cliente: cliente,
+                    metodo_pago: JSON.stringify(detallePagos),
+                    total_usd: totalUSD,
+                    items: concepto
+                }]);
+            }
+
+            alert(`¡Venta procesada con éxito para ${cliente}!\nTotal: $${totalUSD.toFixed(2)}`);
+            switchTab('dashboard');
+            cargarHistorialVentas();
         }
 
-        function closeInsumoModal() {
-            document.getElementById('insumoModal').classList.add('hidden');
-            document.getElementById('insumoModal').classList.remove('flex');
-        }
-
+        // Funciones auxiliares para Supabase (Insumos, Servicios, Clientes, Gastos)
         async function guardarInsumo() {
-            const id = document.getElementById('insumoEditId').value;
-            const categoria = document.getElementById('insumoCat').value;
-            const costo = parseFloat(document.getElementById('insumoCosto').value) || 0;
-            const costo_unitario = parseFloat(document.getElementById('insumoCostoUnitario').value) || 0;
-            const precio = parseFloat(document.getElementById('insumoPrecio').value) || 0;
-            const stock = parseInt(document.getElementById('insumoStock').value) || 0;
-            const stock_minimo = parseInt(document.getElementById('insumoMinimo').value) || 0;
-
-            const datosGuardar = { categoria, costo, costo_unitario, precio, stock, stock_minimo };
-
-            if(id) {
-                await supabaseClient.from('insumos').update(datosGuardar).eq('id', id);
-            } else {
-                await supabaseClient.from('insumos').insert([datosGuardar]);
+            const nombre = document.getElementById('insumo-nombre').value;
+            const categoria = document.getElementById('insumo-categoria').value;
+            const costo = parseFloat(document.getElementById('insumo-costo').value) || 0;
+            const stock = parseInt(document.getElementById('insumo-stock').value) || 0;
+            if(!nombre) return alert("Ingresa el nombre del insumo.");
+            
+            if(supabaseClient) {
+                await supabaseClient.from('insumos').insert([{ nombre, categoria, costo_unitario: costo, stock }]);
             }
-            closeInsumoModal();
-            cargarDatosRemotos();
+            alert("Insumo guardado.");
+            cargarInsumos();
         }
 
-        async function eliminarInsumo(id) {
-            if(confirm('¿Eliminar este insumo?')) {
-                await supabaseClient.from('insumos').delete().eq('id', id);
-                cargarDatosRemotos();
+        async function cargarInsumos() {
+            if(!supabaseClient) return;
+            const { data } = await supabaseClient.from('insumos').select('*');
+            const tbody = document.getElementById('tabla-insumos');
+            if(data && tbody) {
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-slate-500">Sin insumos registrados.</td></tr>';
+                data.forEach(i => {
+                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${i.nombre}</td><td class="p-3">${i.categoria || ''}</td><td class="p-3">$${i.costo_unitario}</td><td class="p-3">${i.stock}</td><td class="p-3"></td></tr>`;
+                });
+                document.getElementById('dash-insumos').innerText = data.length;
             }
-        }
-
-        function openServicioModal(id = null) {
-            document.getElementById('servicioEditId').value = id || '';
-            if(id) {
-                const item = db.servicios.find(s => s.id == id);
-                document.getElementById('servicioModalTitle').innerText = 'Editar Servicio';
-                document.getElementById('servNombre').value = item.nombre || '';
-                document.getElementById('servPrecio').value = item.precio || '';
-            } else {
-                document.getElementById('servicioModalTitle').innerText = 'Registrar Servicio Publicitario';
-                document.getElementById('servNombre').value = '';
-                document.getElementById('servPrecio').value = '';
-            }
-            document.getElementById('servicioModal').classList.remove('hidden');
-            document.getElementById('servicioModal').classList.add('flex');
-        }
-
-        function closeServicioModal() {
-            document.getElementById('servicioModal').classList.add('hidden');
-            document.getElementById('servicioModal').classList.remove('flex');
         }
 
         async function guardarServicio() {
-            const id = document.getElementById('servicioEditId').value;
-            const nombre = document.getElementById('servNombre').value;
-            const precio = parseFloat(document.getElementById('servPrecio').value) || 0;
-
-            if(!nombre) { alert('Complete el nombre del servicio'); return; }
-
-            const datosGuardar = { nombre, precio };
-
-            if(id) {
-                await supabaseClient.from('servicios').update(datosGuardar).eq('id', id);
-            } else {
-                await supabaseClient.from('servicios').insert([datosGuardar]);
+            const nombre = document.getElementById('servicio-nombre').value;
+            const precio = parseFloat(document.getElementById('servicio-precio').value) || 0;
+            if(!nombre) return alert("Ingresa el nombre del servicio.");
+            if(supabaseClient) {
+                await supabaseClient.from('servicios').insert([{ nombre, precio }]);
             }
-            closeServicioModal();
-            cargarDatosRemotos();
+            alert("Servicio guardado.");
+            cargarServicios();
         }
 
-        async function eliminarServicio(id) {
-            if(confirm('¿Eliminar este servicio?')) {
-                await supabaseClient.from('servicios').delete().eq('id', id);
-                cargarDatosRemotos();
+        async function cargarServicios() {
+            if(!supabaseClient) return;
+            const { data } = await supabaseClient.from('servicios').select('*');
+            const tbody = document.getElementById('tabla-servicios');
+            if(data && tbody) {
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="3" class="p-4 text-center text-slate-500">Sin servicios registrados.</td></tr>';
+                data.forEach(s => {
+                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${s.nombre}</td><td class="p-3">$${s.precio}</td><td class="p-3"></td></tr>`;
+                });
             }
-        }
-
-        function openClienteModal(id = null) {
-            document.getElementById('clienteEditId').value = id || '';
-            if(id) {
-                const item = db.clientes.find(c => c.id == id);
-                document.getElementById('clienteModalTitle').innerText = 'Editar Cliente';
-                document.getElementById('cliCedula').value = item.cedula || '';
-                document.getElementById('cliNombre').value = item.nombre || '';
-                document.getElementById('cliTel').value = item.tel || '';
-                document.getElementById('cliInstagram').value = item.instagram || '';
-            } else {
-                document.getElementById('clienteModalTitle').innerText = 'Registrar Nuevo Cliente';
-                document.getElementById('cliCedula').value = '';
-                document.getElementById('cliNombre').value = '';
-                document.getElementById('cliTel').value = '';
-                document.getElementById('cliInstagram').value = '';
-            }
-            document.getElementById('clienteModal').classList.remove('hidden');
-            document.getElementById('clienteModal').classList.add('flex');
-        }
-
-        function closeClienteModal() {
-            document.getElementById('clienteModal').classList.add('hidden');
-            document.getElementById('clienteModal').classList.remove('flex');
         }
 
         async function guardarCliente() {
-            const id = document.getElementById('clienteEditId').value;
-            const cedula = document.getElementById('cliCedula').value;
-            const nombre = document.getElementById('cliNombre').value;
-            const tel = document.getElementById('cliTel').value;
-            const instagram = document.getElementById('cliInstagram').value;
-
-            if(!nombre) { alert('Complete al menos el nombre del cliente'); return; }
-
-            const datosGuardar = { cedula, nombre, tel, instagram };
-
-            if(id) {
-                await supabaseClient.from('clientes').update(datosGuardar).eq('id', id);
-            } else {
-                await supabaseClient.from('clientes').insert([datosGuardar]);
+            const nombre = document.getElementById('cliente-nombre').value;
+            const tel = document.getElementById('cliente-tel').value;
+            const instagram = document.getElementById('cliente-insta').value;
+            if(!nombre) return alert("Ingresa el nombre del cliente.");
+            if(supabaseClient) {
+                await supabaseClient.from('clientes').insert([{ nombre, tel, instagram }]);
             }
-            closeClienteModal();
-            cargarDatosRemotos();
+            alert("Cliente guardado en CRM.");
+            cargarClientes();
         }
 
-        async function eliminarCliente(id) {
-            if(confirm('¿Eliminar este cliente?')) {
-                await supabaseClient.from('clientes').delete().eq('id', id);
-                cargarDatosRemotos();
+        async function cargarClientes() {
+            if(!supabaseClient) return;
+            const { data } = await supabaseClient.from('clientes').select('*');
+            const tbody = document.getElementById('tabla-clientes');
+            if(data && tbody) {
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-slate-500">Sin clientes registrados.</td></tr>';
+                data.forEach(c => {
+                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${c.nombre}</td><td class="p-3">${c.tel || ''}</td><td class="p-3">${c.instagram || ''}</td><td class="p-3"></td></tr>`;
+                });
+                document.getElementById('dash-clientes').innerText = data.length;
             }
         }
 
-        function agregarInsumoACotizacion() {
-            const id = document.getElementById('cotInsumoSelect').value;
-            const cant = parseInt(document.getElementById('cotInsumoCant').value) || 1;
-            const insumo = db.insumos.find(i => i.id == id);
-            if(!insumo) return;
-
-            cotizacionActualItems.push({ 
-                tipo: 'Insumo', 
-                id: insumo.id, 
-                desc: insumo.categoria || 'Insumo', 
-                precio: insumo.precio || insumo.costo_unitario || 0, 
-                cant 
-            });
-            renderCotizacionItems();
-        }
-
-        function agregarServicioACotizacion() {
-            const id = document.getElementById('cotServicioSelect').value;
-            const cant = parseInt(document.getElementById('cotServicioCant').value) || 1;
-            const servicio = db.servicios.find(s => s.id == id);
-            if(!servicio) return;
-
-            cotizacionActualItems.push({ 
-                tipo: 'Servicio', 
-                id: servicio.id, 
-                desc: servicio.nombre || '', 
-                precio: servicio.precio || 0, 
-                cant 
-            });
-            renderCotizacionItems();
-        }
-
-        function quitarItemCotizacion(index) {
-            cotizacionActualItems.splice(index, 1);
-            renderCotizacionItems();
-        }
-
-        function renderCotizacionItems() {
-            const tbody = document.getElementById('cotItemsBody');
-            if(cotizacionActualItems.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400">Sin elementos agregados a la cotización.</td></tr>';
-                document.getElementById('cotCostoBase').innerText = '$0.00';
-                document.getElementById('cotPrecioEditable').value = '0.00';
-                calcularTotalesCotizacion();
-                return;
+        async function guardarGasto() {
+            const concepto = document.getElementById('gasto-concepto').value;
+            const monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
+            const categoria = document.getElementById('gasto-categoria').value;
+            if(!concepto) return alert("Ingresa el concepto del gasto.");
+            if(supabaseClient) {
+                await supabaseClient.from('gastos').insert([{ concepto, monto, categoria }]);
             }
-
-            let html = '';
-            let costoBase = 0;
-            cotizacionActualItems.forEach((item, index) => {
-                const subtotal = item.precio * item.cant;
-                costoBase += subtotal;
-                html += '<tr>' +
-                    '<td class="py-2">' + item.desc + ' <span class="text-xs text-indigo-500">(' + item.tipo + ')</span></td>' +
-                    '<td class="py-2 text-center">' + item.cant + '</td>' +
-                    '<td class="py-2 text-right">$' + item.precio.toFixed(2) + '</td>' +
-                    '<td class="py-2 text-right font-medium">$' + subtotal.toFixed(2) + '</td>' +
-                    '<td class="py-2 text-right"><button onclick="quitarItemCotizacion(' + index + ')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>' +
-                '</tr>';
-            });
-            tbody.innerHTML = html;
-            document.getElementById('cotCostoBase').innerText = '$' + costoBase.toFixed(2);
-            
-            const margen = parseFloat(document.getElementById('cotMargen').value) || 0;
-            const sugerido = costoBase * (1 + margen / 100);
-            document.getElementById('cotPrecioEditable').value = sugerido.toFixed(2);
-            calcularTotalesCotizacion();
+            alert("Gasto registrado.");
+            cargarGastos();
         }
 
-        function calcularTotalesCotizacion() {
-            const totalUSD = parseFloat(document.getElementById('cotPrecioEditable').value) || 0;
-            const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
-            const totalBs = totalUSD * tasaBCV;
-            document.getElementById('cotTotalBs').innerText = 'Bs. ' + totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
-        document.getElementById('cotPrecioEditable').addEventListener('input', calcularTotalesCotizacion);
-        document.getElementById('bcvRate').addEventListener('input', calcularTotalesCotizacion);
-
-        function enviarCotizacionAFacturacion() {
-            if(cotizacionActualItems.length === 0) { alert('Agregue elementos al presupuesto primero.'); return; }
-            facturaActualItems = [...cotizacionActualItems];
-            renderFacturacionItems();
-            switchTab('facturacion', document.querySelector("button[onclick*='facturacion']"));
-        }
-
-        function generarPDFCotizacion() {
-            const clienteId = document.getElementById('cotClienteSelect').value;
-            const cliente = db.clientes.find(c => c.id == clienteId);
-            document.getElementById('previewClienteNombre').innerText = cliente ? cliente.nombre : 'Público General';
-            document.getElementById('previewProyectoNombre').innerText = document.getElementById('cotProyectoNombre').value || 'Sin especificar';
-
-            const element = document.getElementById('calculadora');
-            const opt = {
-                margin: 0.5,
-                filename: 'Cotizacion_LAN_Estudio.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().from(element).save();
-        }
-
-        function agregarInsumoAFacturacion() {
-            const id = document.getElementById('factInsumoSelect').value;
-            const cant = parseInt(document.getElementById('factInsumoCant').value) || 1;
-            const insumo = db.insumos.find(i => i.id == id);
-            if(!insumo) return;
-
-            facturaActualItems.push({ 
-                tipo: 'Insumo', 
-                id: insumo.id, 
-                desc: insumo.categoria || 'Insumo', 
-                precio: insumo.precio || insumo.costo_unitario || 0, 
-                cant 
-            });
-            renderFacturacionItems();
-        }
-
-        function agregarServicioAFacturacion() {
-            const id = document.getElementById('factServicioSelect').value;
-            const cant = parseInt(document.getElementById('factServicioCant').value) || 1;
-            const servicio = db.servicios.find(s => s.id == id);
-            if(!servicio) return;
-
-            facturaActualItems.push({ 
-                tipo: 'Servicio', 
-                id: servicio.id, 
-                desc: servicio.nombre || '', 
-                precio: servicio.precio || 0, 
-                cant 
-            });
-            renderFacturacionItems();
-        }
-
-        function quitarItemFacturacion(index) {
-            facturaActualItems.splice(index, 1);
-            renderFacturacionItems();
-        }
-
-        function renderFacturacionItems() {
-            const tbody = document.getElementById('factItemsBody');
-            if(facturaActualItems.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400">Sin elementos en el ticket.</td></tr>';
-                document.getElementById('factTotalDolares').innerText = '$0.00';
-                document.getElementById('factTotalBs').innerText = 'Bs. 0.00';
-                return;
+        async function cargarGastos() {
+            if(!supabaseClient) return;
+            const { data } = await supabaseClient.from('gastos').select('*');
+            const tbody = document.getElementById('tabla-gastos');
+            if(data && tbody) {
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="4" class="p-4 text-center text-slate-500">Sin gastos registrados.</td></tr>';
+                data.forEach(g => {
+                    tbody.innerHTML += `<tr class="border-b border-slate-800"><td class="p-3">${g.concepto}</td><td class="p-3">${g.categoria}</td><td class="p-3">$${g.monto}</td><td class="p-3">${new Date(g.created_at).toLocaleDateString()}</td></tr>`;
+                });
             }
-            let html = '';
-            let total = 0;
-            facturaActualItems.forEach((item, index) => {
-                const subtotal = item.precio * item.cant;
-                total += subtotal;
-                html += '<tr>' +
-                    '<td class="py-2">' + item.desc + ' <span class="text-xs text-indigo-500">(' + item.tipo + ')</span></td>' +
-                    '<td class="py-2 text-center">' + item.cant + '</td>' +
-                    '<td class="py-2 text-right">$' + subtotal.toFixed(2) + '</td>' +
-                    '<td class="py-2 text-right"><button onclick="quitarItemFacturacion(' + index + ')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>' +
-                '</tr>';
-            });
-            tbody.innerHTML = html;
-            document.getElementById('factTotalDolares').innerText = '$' + total.toFixed(2);
-            const tasaBCV = parseFloat(document.getElementById('bcvRate').value) || 1;
-            document.getElementById('factTotalBs').innerText = 'Bs. ' + (total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits: 2});
         }
 
-        async function procesarFactura() {
-            if(facturaActualItems.length === 0) { alert('No hay elementos en el ticket de venta.'); return; }
-            const clienteId = document.getElementById('factClienteSelect').value;
-            const cliente = db.clientes.find(c => c.id == clienteId);
-            const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
-            const total = facturaActualItems.reduce((acc, item) => acc + (item.precio * item.cant), 0);
+        async function cargarHistorialVentas() {
+            if(!supabaseClient) return;
+            const { data } = await supabaseClient.from('ventas').select('*').order('created_at', { ascending: false });
+            const tbody = document.getElementById('tabla-historial-ventas');
+            let totalVentasGlobal = 0;
+            if(data && tbody) {
+                tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay transacciones aún.</td></tr>';
+                data.forEach(v => {
+                    totalVentasGlobal += (v.total_usd || 0);
+                    let metodoTexto = v.metodo_pago;
+                    try {
+                        const parsed = JSON.parse(v.metodo_pago);
+                        metodoTexto = parsed.map(p => `${p.metodo}: $${p.monto} ${p.moneda}`).join(', ');
+                    } catch(e) {}
 
-            for(const item of facturaActualItems) {
-                if(item.tipo === 'Insumo') {
-                    const ins = db.insumos.find(i => i.id == item.id);
-                    if(ins) {
-                        const stockActual = parseInt(ins.stock) || 0;
-                        const nuevoStock = Math.max(0, stockActual - item.cant);
-                        await supabaseClient.from('insumos').update({ stock: nuevoStock }).eq('id', ins.id);
-                    }
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-800">
+                            <td class="p-3">${new Date(v.created_at).toLocaleDateString()}</td>
+                            <td class="p-3 font-semibold text-white">${v.cliente}</td>
+                            <td class="p-3">${v.items}</td>
+                            <td class="p-3 text-emerald-400 font-bold">$${v.total_usd.toFixed(2)}</td>
+                            <td class="p-3 text-xs text-slate-400">${metodoTexto}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('dash-ventas').innerText = `$${totalVentasGlobal.toFixed(2)}`;
+            }
+        }
+
+        function actualizarLogo() {
+            const input = document.getElementById('logo-file-input');
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}" class="w-8 h-8 object-cover rounded-lg">`;
+                    alert("¡Logo actualizado con éxito!");
                 }
-            }
-
-            await supabaseClient.from('ventas').insert([{
-                fecha: new Date().toLocaleDateString(),
-                cliente: cliente ? cliente.nombre : 'Público General',
-                metodo,
-                total
-            }]);
-
-            facturaActualItems = [];
-            renderFacturacionItems();
-            await cargarDatosRemotos();
-            alert('¡Venta procesada con éxito y stock actualizado en la nube!');
-        }
-
-        function renderTablas() {
-            const tbodyIns = document.getElementById('tablaInsumosBody');
-            if(db.insumos.length === 0) {
-                tbodyIns.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin insumos registrados.</td></tr>';
+                reader.readAsDataURL(input.files[0]);
             } else {
-                tbodyIns.innerHTML = db.insumos.map(i => {
-                    const costo = parseFloat(i.costo || 0);
-                    const costoUnit = parseFloat(i.costo_unitario || 0);
-                    const precio = parseFloat(i.precio || 0);
-                    const stock = parseInt(i.stock || 0);
-                    const minimo = parseInt(i.stock_minimo || 0);
-                    return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + (i.categoria || '') + '</td>' +
-                        '<td class="p-3">$' + costo.toFixed(2) + '</td>' +
-                        '<td class="p-3">$' + costoUnit.toFixed(2) + '</td>' +
-                        '<td class="p-3">$' + precio.toFixed(2) + '</td>' +
-                        '<td class="p-3 ' + (stock <= minimo ? 'text-red-600 font-bold' : '') + '">' + stock + '</td>' +
-                        '<td class="p-3">' + minimo + '</td>' +
-                        '<td class="p-3 text-right space-x-2">' +
-                            '<button onclick="openInsumoModal(\'' + i.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
-                            '<button onclick="eliminarInsumo(\'' + i.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
-                        '</td>' +
-                    '</tr>';
-                }).join('');
-            }
-
-            const tbodyServ = document.getElementById('tablaServiciosBody');
-            if(db.servicios.length === 0) {
-                tbodyServ.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">Sin servicios registrados.</td></tr>';
-            } else {
-                tbodyServ.innerHTML = db.servicios.map(s => 
-                    '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + (s.nombre || '') + '</td>' +
-                        '<td class="p-3 text-right">$' + parseFloat(s.precio || 0).toFixed(2) + '</td>' +
-                        '<td class="p-3 text-right space-x-2">' +
-                            '<button onclick="openServicioModal(\'' + s.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
-                            '<button onclick="eliminarServicio(\'' + s.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
-                        '</td>' +
-                    '</tr>'
-                ).join('');
-            }
-
-            const tbodyCli = document.getElementById('tablaClientesBody');
-            if(db.clientes.length === 0) {
-                tbodyCli.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin clientes registrados.</td></tr>';
-            } else {
-                tbodyCli.innerHTML = db.clientes.map(c => {
-                    const cedula = c.cedula || '';
-                    const nombre = c.nombre || '';
-                    const tel = c.tel || '';
-                    const instagram = c.instagram || '';
-                    return '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-                        '<td class="p-3 font-medium">' + cedula + '</td>' +
-                        '<td class="p-3">' + nombre + '</td>' +
-                        '<td class="p-3">' + tel + '</td>' +
-                        '<td class="p-3">' + instagram + '</td>' +
-                        '<td class="p-3 text-right space-x-2">' +
-                            '<button onclick="openClienteModal(\'' + c.id + '\')" class="text-indigo-600 hover:text-indigo-800"><i class="fa-solid fa-pen"></i></button> ' +
-                            '<button onclick="eliminarCliente(\'' + c.id + '\')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>' +
-                        '</td>' +
-                    '</tr>';
-                }).join('');
+                alert("Por favor selecciona una imagen primero.");
             }
         }
 
-        function renderSelects() {
-            const optCli = '<option value="">-- Seleccionar Cliente --</option>' + db.clientes.map(c => {
-                return '<option value="' + c.id + '">' + (c.nombre || '') + ' (' + (c.cedula || '') + ')</option>';
-            }).join('');
-            document.getElementById('cotClienteSelect').innerHTML = optCli;
-            document.getElementById('factClienteSelect').innerHTML = optCli;
-
-            const optIns = '<option value="">-- Seleccionar Insumo --</option>' + db.insumos.map(i => {
-                const desc = i.categoria || 'Insumo';
-                const precio = i.precio || i.costo_unitario || 0;
-                return '<option value="' + i.id + '">' + desc + ' ($' + precio + ')</option>';
-            }).join('');
-            document.getElementById('cotInsumoSelect').innerHTML = optIns;
-            document.getElementById('factInsumoSelect').innerHTML = optIns;
-
-            const optServ = '<option value="">-- Seleccionar Servicio --</option>' + db.servicios.map(s => {
-                return '<option value="' + s.id + '">' + (s.nombre || '') + ' ($' + (s.precio || 0) + ')</option>';
-            }).join('');
-            document.getElementById('cotServicioSelect').innerHTML = optServ;
-            document.getElementById('factServicioSelect').innerHTML = optServ;
-        }
-
-        function actualizarDashboard() {
-            const totalVentas = db.ventas.reduce((acc, v) => acc + parseFloat(v.total || 0), 0);
-            document.getElementById('dashVentas').innerText = '$' + totalVentas.toFixed(2);
-            document.getElementById('dashInsumos').innerText = db.insumos.length;
-            const alertass = db.insumos.filter(i => {
-                const stock = parseInt(i.stock || 0);
-                const minimo = parseInt(i.stock_minimo || 0);
-                return stock <= minimo;
-            }).length;
-            document.getElementById('dashAlerta').innerText = alertass;
-            document.getElementById('dashServicios').innerText = db.servicios.length;
-        }
-
-        cargarDatosRemotos();
-
-        // Sincronización automática periódica cada 5 segundos en segundo plano para cualquier dispositivo (Chromebook, tlf, laptop)
-        setInterval(cargarDatosRemotos, 5000);
+        // Inicializar al cargar
+        window.onload = function() {
+            fetchBCVRate();
+            calcularPreciosPorGanancia();
+            agregarMetodoPago();
+            cargarInsumos();
+            cargarServicios();
+            cargarClientes();
+            cargarGastos();
+            cargarHistorialVentas();
+        };
     </script>
 </body>
 </html>
