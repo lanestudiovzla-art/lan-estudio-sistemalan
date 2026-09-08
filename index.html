@@ -754,33 +754,118 @@
             }
         }
 function exportarPDFPresupuesto() {
-    const elemento = document.getElementById('area-impresion-presupuesto');
+    const elementoOriginal = document.getElementById('area-impresion-presupuesto');
+    const clone = document.createElement('div');
     
-    // 1. Guardamos una copia del HTML original para restaurarlo después
-    const htmlOriginal = elemento.innerHTML;
-
-    // 2. Creamos una versión limpia temporalmente solo para el PDF del cliente
-    // Ocultamos botones, filas de acción, y convertimos inputs en texto plano
-    const clone = elemento.cloneNode(true);
-    
-    // Ocultar elementos administrativos dentro del clon
-    const elementosAOcultar = clone.querySelectorAll('button, .btn, th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(7), td:nth-child(7), #doc-subtotal-costo, #doc-total-ganancia');
-    elementosAOcultar.forEach(el => el.remove());
-
-    // Limpiar inputs para que se lean como texto plano y formal
-    const inputs = clone.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        const span = document.createElement('span');
-        span.innerText = input.value || input.innerText || '';
-        span.style.fontWeight = '500';
-        span.style.color = '#1e293b';
-        input.parentNode.replaceChild(span, input);
-    });
-
-    // Cambiar temporalmente el contenedor a fondo blanco impecable para el cliente
+    // Estilos base impecables para la página del cliente
     clone.style.backgroundColor = '#ffffff';
     clone.style.color = '#1e293b';
-    clone.style.padding = '20px';
+    clone.style.padding = '30px';
+    clone.style.fontFamily = 'Inter, sans-serif';
+
+    // 1. Copiamos el encabezado corporativo limpio (Logo, datos, cliente, validez)
+    const headerOriginal = elementoOriginal.querySelector('.space-y-6') || elementoOriginal.children[0];
+    if (headerOriginal) {
+        const headerClone = headerOriginal.cloneNode(true);
+        // Limpiamos cualquier botón o elemento raro del header si lo hubiera
+        headerClone.querySelectorAll('button, .btn').forEach(el => el.remove());
+        clone.appendChild(headerClone);
+    }
+
+    // 2. Construimos una tabla limpia y profesional solo con Descripción, Cantidad y Precio Final
+    const tablaContainer = document.createElement('div');
+    tablaContainer.style.marginTop = '30px';
+    
+    let htmlTabla = `
+        <h3 style="font-size: 14px; color: #64748b; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Ítems y Servicios Presupuestados</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background-color: #f1f5f9; color: #475569; text-align: left;">
+                    <th style="padding: 10px; border-bottom: 2px solid #cbd5e1;">Descripción / Concepto</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #cbd5e1; text-align: center; width: 80px;">Cant</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #cbd5e1; text-align: right; width: 120px;">Precio Cliente ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Extraemos los datos directamente de las filas activas en pantalla de forma limpia
+    const filas = elementoOriginal.querySelectorAll('tbody tr, .fila-item, tr');
+    let hayItems = false;
+
+    // Buscamos las filas reales de la tabla de la interfaz
+    const tablaReal = elementoOriginal.querySelector('table');
+    if (tablaReal) {
+        const trs = tablaReal.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const select = tr.querySelector('select');
+            const inputCant = tr.querySelector('input[type="number"], input');
+            const spanPrecioCliente = tr.querySelector('.precio-cliente, td:nth-last-child(2) span, td:nth-last-child(2) input') || tr.querySelector('td:nth-of-type(6) span, td:nth-of-type(6)');
+
+            // Obtenemos el texto limpio del servicio seleccionado
+            let nombreServicio = '';
+            if (select && select.selectedIndex > 0) {
+                nombreServicio = select.options[select.selectedIndex].text.split('($)')[0].replace('-- Seleccionar Servicio del Catálogo --', '').replace('-- Seleccionar Insumo del Stock --', '').trim();
+            } else {
+                // Si es texto plano o input de descripción
+                const descInput = tr.querySelector('input[type="text"]');
+                nombreServicio = descInput ? descInput.value : (tr.cells[0] ? tr.cells[0].innerText : '');
+            }
+
+            // Si hay un nombre de servicio válido, lo agregamos al reporte limpio
+            if (nombreServicio && nombreServicio !== '') {
+                hayItems = true;
+                const cantidad = inputCant ? inputCant.value : '1';
+                
+                // Buscamos el precio cliente visualizado en la fila
+                let precioFinal = '0.00';
+                const inputPrecio = tr.querySelector('td:nth-last-child(2) input');
+                if (inputPrecio) {
+                    precioFinal = inputPrecio.value;
+                } else if (spanPrecioCliente) {
+                    precioFinal = spanPrecioCliente.innerText || spanPrecioCliente.value || '0.00';
+                }
+
+                htmlTabla += `
+                    <tr>
+                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; font-weight: 500;">${nombreServicio}</td>
+                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; text-align: center;">${cantidad}</td>
+                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a; text-align: right; font-weight: 600;">$${precioFinal}</td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    htmlTabla += `
+            </tbody>
+        </table>
+    `;
+
+    tablaContainer.innerHTML = htmlTabla;
+    clone.appendChild(tablaContainer);
+
+    // 3. Totales limpios y profesionales abajo
+    const totalOriginal = elementoOriginal.querySelector('.total-presupuesto, .text-right:has(#total-presupuesto), div:has(> span:contains("Total Presupuesto"))') || elementoOriginal.querySelector('.flex.justify-end');
+    
+    // Obtenemos el monto total directamente de la interfaz
+    let montoTotalFinal = '0.00';
+    const spanTotalInterfaz = elementoOriginal.querySelector('#total-presupuesto, .text-emerald-400, span:contains("$")');
+    if (spanTotalInterfaz) {
+        montoTotalFinal = spanTotalInterfaz.innerText.replace('$', '').trim();
+    }
+
+    const totalContainer = document.createElement('div');
+    totalContainer.style.marginTop = '30px';
+    totalContainer.style.display = 'flex';
+    totalContainer.style.justifyContent = 'flex-end';
+    totalContainer.innerHTML = `
+        <div style="text-align: right; background: #f8fafc; padding: 15px 25px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 14px; color: #64748b; font-weight: 500;">Total Presupuesto:</span>
+            <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 4px;">$${montoTotalFinal}</div>
+        </div>
+    `;
+    clone.appendChild(totalContainer);
 
     const opt = {
         margin:       0.5,
@@ -790,7 +875,6 @@ function exportarPDFPresupuesto() {
         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
-    // Generamos el PDF con el diseño limpio corporativo
     html2pdf().from(clone).set(opt).save();
 }
         // --- FACTURA / CAJA CON DESGLOSE MÚLTIPLE ---
