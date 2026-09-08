@@ -262,7 +262,7 @@
                     </div>
 
                     <div class="mt-4 border-t border-[#e8dbd3] pt-4">
-                        <!-- METODOS DE PAGO FIJOS Y VISIBLES -->
+     <!-- METODOS DE PAGO FIJOS Y VISIBLES -->
 <div class="space-y-3 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3] mb-4">
     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Desglose de Formas de Pago</label>
     
@@ -293,24 +293,40 @@
     </div>
 </div>
 
-                <div class="bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3] flex flex-col justify-between space-y-4">
-                    <div>
-                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-[#e8dbd3] pb-2 mb-3">Resumen de Cobro</h3>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Total Factura:</span>
-                                <span id="resumen-total" class="font-bold text-[#2c2c2c]">$0.00</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Total Abonado:</span>
-                                <span id="resumen-abonado" class="font-bold text-[#b88a73]">$0.00</span>
-                            </div>
-                            <div class="flex justify-between border-t border-[#e8dbd3] pt-2">
-                                <span class="text-gray-500">Restante / Vuelto:</span>
-                                <span id="resumen-restante" class="font-bold text-amber-600">$0.00</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- RESUMEN DE COBRO -->
+<div class="bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3] flex flex-col justify-between space-y-4">
+    <div>
+        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-[#e8dbd3] pb-2 mb-3">Resumen de Cobro</h3>
+        <div class="space-y-2">
+            <!-- Total Factura -->
+            <div class="flex justify-between items-center">
+                <span class="text-gray-500 text-xs">Total Factura:</span>
+                <div class="text-right">
+                    <span id="resumen-total-usd" class="font-bold text-sm text-[#2c2c2c]">$0.00</span>
+                    <div id="resumen-total-ves" class="text-[11px] text-gray-400">Bs. 0,00</div>
+                </div>
+            </div>
+            
+            <!-- Total Abonado -->
+            <div class="flex justify-between items-center">
+                <span class="text-gray-500 text-xs">Total Abonado:</span>
+                <div class="text-right">
+                    <span id="resumen-abonado-usd" class="font-bold text-sm text-[#2c2c2c]">$0.00</span>
+                    <div id="resumen-abonado-ves" class="text-[11px] text-gray-400">Bs. 0,00</div>
+                </div>
+            </div>
+
+            <!-- Restante / Vuelto -->
+            <div class="flex justify-between items-center border-t border-[#e8dbd3] pt-2 mt-2">
+                <span id="label-restante-vuelto" class="text-gray-700 font-semibold text-xs">Restante / Vuelto:</span>
+                <div class="text-right">
+                    <span id="resumen-vuelto-usd" class="font-bold text-sm text-emerald-600">$0.00</span>
+                    <div id="resumen-vuelto-ves" class="text-[11px] text-gray-400">Bs. 0,00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                     <button onclick="procesarPagoFinal()" class="w-full bg-[#b88a73] hover:bg-[#a67963] text-white py-3 rounded-xl font-bold transition shadow-sm flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-check-circle"></i>
@@ -707,24 +723,42 @@
             }
         }
 
-        function exportarPDFPresupuesto() {
-            const elemento = document.getElementById('area-impresion-presupuesto');
-            
-            // Añadir clase para ocultar elementos de control
-            elemento.classList.add('en-modo-pdf');
-
-       const opt = {
-            margin:       [0.4, 0.4, 0.4, 0.4],
-            filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1200 },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-            html2pdf().from(elemento).set(opt).save().then(() => {
-                elemento.classList.remove('en-modo-pdf');
-            });
+    function exportarPDFPresupuesto() {
+    const elemento = document.getElementById('area-impresion-presupuesto');
+    
+    // Crear un estilo temporal para forzar el ancho total y quitar limitaciones de tarjeta
+    const styleTemp = document.createElement('style');
+    styleTemp.id = 'temp-pdf-style';
+    styleTemp.innerHTML = `
+        #area-impresion-presupuesto {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
         }
+    `;
+    document.head.appendChild(styleTemp);
+    
+    elemento.classList.add('en-modo-pdf');
+
+    const opt = {
+        margin:       [0.4, 0.4, 0.4, 0.4],
+        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1200 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().from(elemento).set(opt).save().then(() => {
+        elemento.classList.remove('en-modo-pdf');
+        // Remover el estilo temporal al terminar
+        const elStyle = document.getElementById('temp-pdf-style');
+        if (elStyle) elStyle.remove();
+    });
+}
 
         let filasPagosCount = 0;
 
