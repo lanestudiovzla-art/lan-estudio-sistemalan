@@ -16,9 +16,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
 
-        /* Estilos limpios para el PDF */
+        /* Estilos definitivos para el PDF corregidos de raíz */
         .en-modo-pdf .no-print-controls { display: none !important; }
         .en-modo-pdf .internal-col { display: none !important; }
+        
+        .en-modo-pdf table { width: 100% !important; table-layout: fixed !important; }
+        .en-modo-pdf th:nth-child(1), .en-modo-pdf td:nth-child(1) { width: 70% !important; word-break: break-word !important; }
+        .en-modo-pdf th:nth-child(2), .en-modo-pdf td:nth-child(2) { width: 15% !important; text-align: center !important; }
+        .en-modo-pdf th:nth-child(6), .en-modo-pdf td:nth-child(6) { width: 15% !important; text-align: right !important; }
+
         .en-modo-pdf input, .en-modo-pdf select {
             border: none !important;
             background: transparent !important;
@@ -26,6 +32,12 @@
             font-size: 12px !important;
             color: #2c2c2c !important;
             appearance: none;
+            outline: none !important;
+        }
+        .en-modo-pdf .desc-input {
+            display: block !important;
+            width: 100% !important;
+            font-weight: 500 !important;
         }
         .en-modo-pdf .precio-cliente-input {
             color: #b88a73 !important;
@@ -709,7 +721,6 @@
         function exportarPDFPresupuesto() {
             const elemento = document.getElementById('area-impresion-presupuesto');
             
-            // Aplicamos la clase que oculta controles e inputs para dejarlo como texto plano impreso
             elemento.classList.add('en-modo-pdf');
 
             const opt = {
@@ -721,7 +732,6 @@
             };
 
             html2pdf().from(elemento).set(opt).save().then(() => {
-                // Removemos la clase inmediatamente al terminar de generar el PDF
                 elemento.classList.remove('en-modo-pdf');
             });
         }
