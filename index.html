@@ -262,16 +262,36 @@
                     </div>
 
                     <div class="mt-4 border-t border-[#e8dbd3] pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-bold text-[#2c2c2c] uppercase tracking-wider">Desglose de Formas de Pago</h3>
-                            <button onclick="agregarMetodoPago()" class="text-xs bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-plus mr-1"></i> Añadir Método</button>
-                        </div>
+                        <!-- METODOS DE PAGO FIJOS Y VISIBLES -->
+<div class="space-y-3 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3] mb-4">
+    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Desglose de Formas de Pago</label>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Pago Móvil / Bs -->
+        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
+            <span class="text-xs font-bold text-gray-700 w-28">Pago Móvil (Bs)</span>
+            <input type="number" id="pago-pagomovil-bs" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
+        </div>
 
-                        <div id="lista-pagos" class="space-y-3 max-h-56 overflow-y-auto pr-1">
-                            <!-- Filas inyectadas por JS -->
-                        </div>
-                    </div>
-                </div>
+        <!-- Efectivo USD -->
+        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
+            <span class="text-xs font-bold text-gray-700 w-28">Efectivo ($)</span>
+            <input type="number" id="pago-efectivo-usd" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
+        </div>
+
+        <!-- Zelle -->
+        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
+            <span class="text-xs font-bold text-gray-700 w-28">Zelle ($)</span>
+            <input type="number" id="pago-zelle-usd" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
+        </div>
+
+        <!-- Punto de Venta / Tarjeta -->
+        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
+            <span class="text-xs font-bold text-gray-700 w-28">Punto / Tarjeta</span>
+            <input type="number" id="pago-punto-bs" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
+        </div>
+    </div>
+</div>
 
                 <div class="bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3] flex flex-col justify-between space-y-4">
                     <div>
@@ -693,13 +713,13 @@
             // Añadir clase para ocultar elementos de control
             elemento.classList.add('en-modo-pdf');
 
-            const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
-                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+       const opt = {
+            margin:       [0.4, 0.4, 0.4, 0.4],
+            filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1200 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
 
             html2pdf().from(elemento).set(opt).save().then(() => {
                 elemento.classList.remove('en-modo-pdf');
