@@ -12,73 +12,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        @media print {
-            body * {
-                visibility: hidden !important;
-            }
-
-            #area-impresion-presupuesto, #area-impresion-presupuesto * {
-                visibility: visible !important;
-            }
-<style>
+        <style>
     @media print {
         body * {
             visibility: hidden !important;
         }
     }
-
-    /* Estilos globales de LAN Estudio para toda la plataforma */
-    body {
-        background-color: #faf8f6 !important;
-        color: #2c2c2c !important;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-    }
-
-    .bg-slate-900, .bg-slate-800, div[class*="bg-slate-"] {
-        background-color: #ffffff !important;
-        border-color: #e8dbd3 !important;
-        color: #2c2c2c !important;
-        box-shadow: 0 4px 20px rgba(184, 138, 115, 0.05) !important;
-    }
-
-    .text-slate-400, .text-gray-400 {
-        color: #888888 !important;
-    }
-    
-    h1, h2, h3, h4, .text-white {
-        color: #2c2c2c !important;
-    }
-
-    button, .btn {
-        background-color: #2c2c2c !important;
-        color: #ffffff !important;
-        border-radius: 8px !important;
-        transition: background-color 0.2s ease !important;
-    }
-    button:hover, .btn:hover {
-        background-color: #404040 !important;
-    }
-
-    button[onclick*="exportar"], .bg-emerald-600, .bg-cyan-600 {
-        background-color: #b88a73 !important;
-    }
-    button[onclick*="exportar"]:hover, .bg-emerald-600:hover, .bg-cyan-600:hover {
-        background-color: #a37762 !important;
-    }
-
-    input, select, textarea {
-        background-color: #ffffff !important;
-        color: #2c2c2c !important;
-        border: 1px solid #e8dbd3 !important;
-        border-radius: 8px !important;
-    }
-    input:focus, select:focus, textarea:focus {
-        border-color: #b88a73 !important;
-        box-shadow: 0 0 0 2px rgba(184, 138, 115, 0.2) !important;
-        outline: none !important;
-    }
-</style>
             #area-impresion-presupuesto {
                 position: absolute !important;
                 left: 0 !important;
@@ -221,131 +160,65 @@
             </div>
         </section>
 
-        <!-- MÓDULO: COTIZADOR Y PRESUPUESTOS -->
-        <section id="module-calculadora" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                
-                <div class="flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-file-invoice-dollar text-indigo-400 mr-2"></i> Generador de Presupuestos Profesionales</h2>
-                        <p class="text-xs text-slate-400">Selecciona tus servicios o insumos, ajusta la ganancia y genera el presupuesto listo para enviar por WhatsApp o PDF.</p>
-                    </div>
-                    <div class="flex space-x-3">
-                        <button onclick="exportarPDFPresupuesto()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition shadow flex items-center space-x-2">
-                            <i class="fa-solid fa-file-pdf"></i>
-                            <span>Exportar PDF / Imprimir</span>
-                        </button>
-                    </div>
+<!-- MÓDULO: COTIZADOR Y PRESUPUESTOS (Diseño adaptado a LAN Estudio) -->
+<section id="module-calculadora" class="space-y-6">
+    <!-- Contenedor principal con estilo elegante y limpio -->
+    <div class="bg-white border border-[#e8dbd3] p-6 md:p-8 rounded-2xl shadow-xl space-y-6">
+        
+        <!-- CABECERA CON IDENTIDAD DE MARCA -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-[#f0ede9]">
+            <div class="flex items-center gap-4">
+                <!-- LOGO O NOMBRE DE LA AGENCIA -->
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md" style="background-color: #2c2c2c;">
+                    LAN
                 </div>
-
-                <!-- Datos del Cliente y Configuración del Presupuesto -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <div class="md:col-span-1">
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Cliente Destino (CRM / Nuevo)</label>
-                        <div class="flex space-x-1">
-                            <input type="text" id="presupuesto-cliente" list="crm-clientes-list" placeholder="Selecciona o escribe..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
-                            <datalist id="crm-clientes-list">
-                                <!-- Inyectado por JS -->
-                            </datalist>
-                            <button onclick="agregarClienteRapidoDesdeCotizador()" title="Guardar este cliente nuevo en el CRM" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs transition"><i class="fa-solid fa-user-plus"></i></button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Validez del Presupuesto</label>
-                        <input type="text" id="presupuesto-validez" value="7 días hábiles" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">% Ganancia Global por Defecto</label>
-                        <input type="number" id="presupuesto-ganancia-global" value="30" step="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="aplicarGananciaGlobalATodo()">
-                    </div>
-                    <div class="flex flex-col justify-end">
-                        <label class="flex items-center space-x-2 cursor-pointer py-2">
-                            <input type="checkbox" id="check-mostrar-tasa" checked onchange="recalcularPresupuestoTotal()" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
-                            <span class="text-xs text-slate-300 font-medium">Mostrar Tasa BCV en PDF</span>
-                        </label>
-                    </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight" style="color: #2c2c2c;">Gestor de Presupuestos</h1>
+                    <p class="text-sm font-medium text-gray-500">Agencia de Publicidad y Comunicación — Cotizaciones a medida.</p>
                 </div>
-
-                <!-- Contenedor Imprimible del Presupuesto (Diseño PDF) -->
-                <div id="area-impresion-presupuesto" class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-6">
-                    <!-- Cabecera del Documento PDF (Sin RIF) -->
-                    <div class="flex justify-between items-start border-b border-slate-800 pb-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-white tracking-wide">LAN ESTUDIO</h3>
-                            <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
-                        </div>
-                        <div class="text-right">
-                            <h4 class="text-sm font-bold text-indigo-400 uppercase tracking-widest">PRESUPUESTO</h4>
-                            <p id="presupuesto-fecha-doc" class="text-xs text-slate-400 mt-1">Fecha: --/--/----</p>
-                            <p id="contenedor-tasa-doc" class="text-xs text-slate-400">Ref Tasa BCV: <span id="presupuesto-tasa-doc" class="text-emerald-400 font-semibold">0.00</span></p>
-                        </div>
-                    </div>
-
-                    <!-- Datos del Cliente en el Documento -->
-                    <div class="text-xs text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700/60 flex justify-between">
-                        <div>
-                            <span class="text-slate-400 font-semibold">Preparado para:</span> <span id="doc-cliente-nombre" class="text-white font-bold">Cliente General</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold">Validez:</span> <span id="doc-validez-txt" class="text-white">7 días hábiles</span>
-                        </div>
-                    </div>
-
-                    <!-- Tabla de Renglones / Ítems del Presupuesto con Doble Columna Editable -->
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ítems, Servicios e Insumos a Presupuestar</h4>
-                            <div class="space-x-2">
-                                <button onclick="agregarRenglonServicio()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-bullhorn mr-1"></i> Añadir Servicio</button>
-                                <button onclick="agregarRenglonInsumo()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-box mr-1"></i> Añadir Insumo</button>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-300">
-                                <thead class="bg-slate-800 text-slate-400 uppercase border-b border-slate-700">
-                                    <tr>
-                                        <th class="p-2.5">Descripción / Concepto</th>
-                                        <th class="p-2.5 text-center">Cant</th>
-                                        <th class="p-2.5 text-center">Costo Unit. ($)</th>
-                                        <th class="p-2.5 text-center">% Ganancia</th>
-                                        <th class="p-2.5 text-right font-indigo text-indigo-300">Precio Sugerido ($)</th>
-                                        <th class="p-2.5 text-right font-bold text-emerald-400">Precio Cliente ($)</th>
-                                        <th class="p-2.5 text-center">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="lista-renglones-presupuesto">
-                                    <!-- Inyectado por JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Totales y Resumen del Presupuesto -->
-                    <div class="flex justify-end pt-4 border-t border-slate-800">
-                        <div class="w-full sm:w-72 space-y-2 text-sm bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                            <div class="flex justify-between text-slate-400 text-xs">
-                                <span>Costo Total Producción:</span>
-                                <span id="doc-subtotal-costo" class="font-bold text-white">$0.00</span>
-                            </div>
-                            <div class="flex justify-between text-slate-400 text-xs">
-                                <span>Ganancia Total Real:</span>
-                                <span id="doc-total-ganancia" class="font-bold text-indigo-400">$0.00</span>
-                            </div>
-                            <div class="flex justify-between border-t border-slate-700 pt-2 text-base font-bold text-white">
-                                <span>Total Presupuesto ($):</span>
-                                <span id="doc-total-usd" class="text-emerald-400">$0.00</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-emerald-300 font-semibold">
-                                <span>Total en Bolívares (VES):</span>
-                                <span id="doc-total-ves">Bs. 0.00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
-        </section>
+            
+            <!-- TASA BCV OFICIAL -->
+            <div class="bg-[#faf8f6] px-4 py-2.5 rounded-xl border border-[#e8dbd3] text-right">
+                <div class="text-xs font-bold uppercase tracking-wider" style="color: #b88a73;">Tasa BCV Actual</div>
+                <div id="tasa-bcv-display" class="font-extrabold text-lg tabular-nums text-gray-800">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- BARRA DE ACCIONES Y BÚSQUEDA -->
+        <div class="bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3] flex flex-wrap justify-between items-center gap-4">
+            <!-- Buscador -->
+            <div class="relative w-full md:w-96">
+                <input type="text" id="buscador-servicios" placeholder="Buscar servicio o insumo..." class="w-full bg-white text-gray-800 border border-[#e8dbd3] rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-[#b88a73] focus:outline-none text-sm">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="flex space-x-3 w-full md:w-auto justify-end">
+                <button id="btn-agregar-servicio" class="text-white px-5 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 text-sm shadow-sm" style="background-color: #2c2c2c;">
+                    <i class="fas fa-plus-circle" style="color: #b88a73;"></i>
+                    Añadir Servicio
+                </button>
+                <button onclick="exportarPDFPresupuesto()" class="text-white px-5 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 text-sm shadow-sm" style="background-color: #b88a73;">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Generar PDF / Imprimir</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR DE LA TABLA Y CLIENTE -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-700">Detalle del Presupuesto y Partidas</h3>
+            </div>
+            
+            <!-- El contenido dinámico de tu JS se inyectará aquí correctamente -->
+            <div id="tabla-presupuesto-container" class="overflow-x-auto rounded-xl border border-[#e8dbd3]">
+            </div>
+        </div>
+
+    </div>
+</section>
 
         <!-- MÓDULO: FACTURA / CAJA Y PAGOS DESGLOSADOS -->
         <section id="module-caja" class="hidden space-y-6">
