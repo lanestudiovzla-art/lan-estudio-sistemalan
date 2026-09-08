@@ -608,20 +608,26 @@
             recalcularPresupuestoTotal();
         }
 
-        function aplicarGananciaGlobalATodo() {
-            const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 30;
-            document.querySelectorAll('.renglon-item').forEach(row => {
-                row.querySelector('.ganancia-input').value = gananciaGlobal;
-                const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
-                const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
-                const costoTotalItem = cant * costoUnit;
-                const sugeridoItem = costoTotalItem * (1 + (gananciaGlobal / 100));
-                
-                row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
-                row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
-            });
-            recalcularPresupuestoTotal();
+    function aplicarGananciaGlobalATodo() {
+    const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 0;
+    
+    document.querySelectorAll('.renglon-item').forEach(row => {
+        const inputGananciaFila = row.querySelector('.ganancia-input');
+        if (inputGananciaFila) {
+            inputGananciaFila.value = gananciaGlobal;
         }
+
+        const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
+        const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
+        const costoTotalItem = cant * costoUnit;
+        const sugeridoItem = costoTotalItem * (1 + (gananciaGlobal / 100));
+        
+        row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
+        row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
+    });
+    
+    recalcularPresupuestoTotal();
+}
 
         function recalcularPresupuestoTotal() {
             let subtotalCostoGlobal = 0;
