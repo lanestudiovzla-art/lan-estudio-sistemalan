@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- html2pdf para exportar presupuestos en PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -45,7 +47,7 @@
     <!-- Navegación General de Módulos -->
     <nav class="bg-slate-800/60 border-b border-slate-700 px-6 py-2 flex space-x-2 overflow-x-auto">
         <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
-        <button onclick="switchTab('calculadora')" id="tab-calculadora" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-calculator mr-2"></i>Calculadora y Cotizador</button>
+        <button onclick="switchTab('calculadora')" id="tab-calculadora" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Cotizador y Presupuestos</button>
         <button onclick="switchTab('caja')" id="tab-caja" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-cash-register mr-2"></i>Factura / Caja y Pagos</button>
         <button onclick="switchTab('insumos')" id="tab-insumos" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-boxes-stacked mr-2"></i>Insumos y Stock</button>
         <button onclick="switchTab('servicios')" id="tab-servicios" class="px-4 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bullhorn mr-2"></i>Servicios</button>
@@ -99,41 +101,120 @@
             </div>
         </section>
 
-        <!-- MÓDULO: CALCULADORA Y COTIZADOR (MEJORADO CON PRECIO CLIENTE Y DOBLE VÍA) -->
+        <!-- MÓDULO: COTIZADOR Y PRESUPUESTOS (NUEVO FORMATO PROFESIONAL) -->
         <section id="module-calculadora" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                <h2 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mr-2"></i> Simulador de Precios y Ganancias</h2>
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Costo Total Insumos / Producción ($)</label>
-                        <input type="number" id="calc-costo" value="10.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" oninput="calcularPreciosPorGanancia()">
+                        <h2 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-file-invoice-dollar text-indigo-400 mr-2"></i> Generador de Presupuestos Profesionales</h2>
+                        <p class="text-xs text-slate-400">Selecciona tus servicios o insumos, ajusta la ganancia y genera el presupuesto listo para enviar por WhatsApp o PDF.</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Porcentaje de Ganancia (%)</label>
-                        <input type="number" id="calc-ganancia" value="30" step="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" oninput="calcularPreciosPorGanancia()">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Precio Sugerido Sistema ($)</label>
-                        <input type="text" id="calc-sugerido" readonly class="w-full bg-slate-900/50 border border-slate-700/60 rounded-xl px-4 py-2.5 text-indigo-300 font-bold">
+                    <div class="flex space-x-3">
+                        <button onclick="exportarPDFPresupuesto()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition shadow flex items-center space-x-2">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Exportar PDF / Imprimir</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Nuevo Renglón: Precio Cliente y Conversión BCV -->
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
+                <!-- Datos del Cliente y Configuración del Presupuesto -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2"><i class="fa-solid fa-tag mr-1"></i> Precio Cliente / Venta Final ($)</label>
-                        <input type="number" id="calc-precio-cliente" value="13.00" step="0.01" class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-4 py-3 text-white font-bold text-lg focus:outline-none focus:border-emerald-500" oninput="calcularPreciosPorCliente()">
-                        <p class="text-xs text-slate-400 mt-1">Modifica este campo libremente; recalculará la ganancia de forma inversa.</p>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Cliente Destino</label>
+                        <select id="presupuesto-cliente" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none">
+                            <option value="Cliente General">-- Seleccionar Cliente CRM --</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Equivalente en Bolívares (Tasa BCV)</label>
-                        <div id="calc-total-ves" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-emerald-400 font-bold text-lg flex items-center">
-                            Bs. 0.00
-                        </div>
-                        <p class="text-xs text-slate-400 mt-1">Calculado automáticamente con la tasa oficial actual.</p>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Validez del Presupuesto</label>
+                        <input type="text" id="presupuesto-validez" value="7 días hábiles" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">% de Ganancia Global por Defecto</label>
+                        <input type="number" id="presupuesto-ganancia-global" value="30" step="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
                     </div>
                 </div>
+
+                <!-- Contenedor Imprimible del Presupuesto (Diseño PDF) -->
+                <div id="area-impresion-presupuesto" class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-6">
+                    <!-- Cabecera del Documento PDF -->
+                    <div class="flex justify-between items-start border-b border-slate-800 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white tracking-wide">LAN ESTUDIO</h3>
+                            <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
+                            <p class="text-xs text-slate-400 mt-1">Rif / NIT: J-XXXXXXXX-X</p>
+                        </div>
+                        <div class="text-right">
+                            <h4 class="text-sm font-bold text-indigo-400 uppercase tracking-widest">PRESUPUESTO</h4>
+                            <p id="presupuesto-fecha-doc" class="text-xs text-slate-400 mt-1">Fecha: --/--/----</p>
+                            <p class="text-xs text-slate-400">Ref Tasa BCV: <span id="presupuesto-tasa-doc" class="text-emerald-400 font-semibold">0.00</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Datos del Cliente en el Documento -->
+                    <div class="text-xs text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700/60 flex justify-between">
+                        <div>
+                            <span class="text-slate-400 font-semibold">Preparado para:</span> <span id="doc-cliente-nombre" class="text-white font-bold">Cliente General</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-semibold">Validez:</span> <span id="doc-validez-txt" class="text-white">7 días hábiles</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Renglones / Ítems del Presupuesto -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ítems, Servicios e Insumos a Presupuestar</h4>
+                            <div class="space-x-2">
+                                <button onclick="agregarRenglonServicio()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-bullhorn mr-1"></i> Añadir Servicio</button>
+                                <button onclick="agregarRenglonInsumo()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-box mr-1"></i> Añadir Insumo</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-800 text-slate-400 uppercase border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-2.5">Descripción / Concepto</th>
+                                        <th class="p-2.5 text-center">Cant</th>
+                                        <th class="p-2.5 text-center">Costo Unit. ($)</th>
+                                        <th class="p-2.5 text-center">% Ganancia</th>
+                                        <th class="p-2.5 text-right">Precio Sugerido ($)</th>
+                                        <th class="p-2.5 text-right font-bold text-emerald-400">Precio Cliente Final ($)</th>
+                                        <th class="p-2.5 text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-renglones-presupuesto">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totales y Resumen del Presupuesto -->
+                    <div class="flex justify-end pt-4 border-t border-slate-800">
+                        <div class="w-full sm:w-72 space-y-2 text-sm bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                            <div class="flex justify-between text-slate-400 text-xs">
+                                <span>Costo Total Producción:</span>
+                                <span id="doc-subtotal-costo" class="font-bold text-white">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400 text-xs">
+                                <span>Ganancia Total Estimada:</span>
+                                <span id="doc-total-ganancia" class="font-bold text-indigo-400">$0.00</span>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-700 pt-2 text-base font-bold text-white">
+                                <span>Total Presupuesto ($):</span>
+                                <span id="doc-total-usd" class="text-emerald-400">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-emerald-300 font-semibold">
+                                <span>Total en Bolívares (VES):</span>
+                                <span id="doc-total-ves">Bs. 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -247,7 +328,7 @@
                 <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-bullhorn text-indigo-400 mr-2"></i> Catálogo de Servicios Publicitarios</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <input type="text" id="servicio-nombre" placeholder="Nombre del Servicio" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
-                    <input type="number" id="servicio-precio" placeholder="Precio Venta ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+                    <input type="number" id="servicio-precio" placeholder="Precio Base ($)" step="0.01" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
                     <button onclick="guardarServicio()" class="sm:col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-medium transition text-sm">Guardar Servicio en Nube</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -255,7 +336,7 @@
                         <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
                             <tr>
                                 <th class="p-3">Servicio</th>
-                                <th class="p-3">Precio ($)</th>
+                                <th class="p-3">Precio Base ($)</th>
                                 <th class="p-3">Acciones</th>
                             </tr>
                         </thead>
@@ -342,14 +423,15 @@
 
     </main>
 
-    <!-- Script Lógico Integral (Supabase + Funciones) -->
+    <!-- Script Lógico Integral (Supabase + Cotizador Dinámico + PDF) -->
     <script>
-        // Configuración de Supabase (Sustituye con tus credenciales si es necesario)
-        const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
+        const SUPABASE_URL = 'https://sb_publishable_lM5EB6PWxCmo-3frEG2XpA_NxPWAmTb';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
         const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         let tasaBCV = 807.39;
+        let listaInsumosDB = [];
+        let listaServiciosDB = [];
 
         function switchTab(tabId) {
             ['dashboard', 'calculadora', 'caja', 'insumos', 'servicios', 'crm', 'finanzas', 'logo'].forEach(t => {
@@ -365,7 +447,12 @@
 
             if(tabId === 'caja') {
                 actualizarTotalesCaja();
-                cargarClientesEnCaja();
+                cargarClientesEnSelects();
+            }
+            if(tabId === 'calculadora') {
+                cargarClientesEnSelects();
+                document.getElementById('presupuesto-fecha-doc').innerText = `Fecha: ${new Date().toLocaleDateString()}`;
+                document.getElementById('presupuesto-tasa-doc').innerText = `Bs. ${tasaBCV.toFixed(2)}`;
             }
         }
 
@@ -379,46 +466,189 @@
                     if(data.usd) {
                         tasaBCV = parseFloat(data.usd);
                         display.innerText = `Bs. ${tasaBCV.toFixed(2)}`;
-                        calcularPreciosPorGanancia();
+                        document.getElementById('presupuesto-tasa-doc').innerText = `Bs. ${tasaBCV.toFixed(2)}`;
+                        recalcularPresupuestoTotal();
                         return;
                     }
                 }
                 throw new Error("Respuesta inválida");
             } catch (error) {
                 display.innerText = `Bs. ${tasaBCV.toFixed(2)} (Ref)`;
-                calcularPreciosPorGanancia();
+                document.getElementById('presupuesto-tasa-doc').innerText = `Bs. ${tasaBCV.toFixed(2)}`;
+                recalcularPresupuestoTotal();
             }
         }
 
-        // Calculadora Doble Vía
-        function calcularPreciosPorGanancia() {
-            const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
-            const gananciaPct = parseFloat(document.getElementById('calc-ganancia').value) || 0;
+        // --- LÓGICA DEL COTIZADOR DINÁMICO DE RENGLONES ---
+        let renglonIndex = 0;
+
+        function agregarRenglonServicio(nombreDefault = '', costoDefault = 0) {
+            renglonIndex++;
+            const tbody = document.getElementById('lista-renglones-presupuesto');
+            const rowId = `renglon-${renglonIndex}`;
+            const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 30;
+
+            let opcionesServicios = '<option value="">-- Seleccionar Servicio del Catálogo --</option>';
+            listaServiciosDB.forEach(s => {
+                opcionesServicios += `<option value="${s.nombre}" data-precio="${s.precio}">${s.nombre} ($${s.precio})</option>`;
+            });
+
+            const html = `
+                <tr id="${rowId}" class="border-b border-slate-800 renglon-item">
+                    <td class="p-2">
+                        <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full select-servicio" onchange="seleccionarServicioCatalogo('${rowId}')">
+                            ${opcionesServicios}
+                        </select>
+                        <input type="text" value="${nombreDefault}" placeholder="Descripción del servicio" class="mt-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full desc-input">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" value="1" min="1" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="0.01" value="${costoDefault}" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
+                    <td class="p-2 text-right">
+                        <input type="number" step="0.01" value="0.00" class="w-24 bg-slate-800 border border-emerald-500/60 text-emerald-400 font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', html);
+            recalcularPresupuestoTotal();
+        }
+
+        function agregarRenglonInsumo() {
+            renglonIndex++;
+            const tbody = document.getElementById('lista-renglones-presupuesto');
+            const rowId = `renglon-${renglonIndex}`;
+            const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 30;
+
+            let opcionesInsumos = '<option value="">-- Seleccionar Insumo del Stock --</option>';
+            listaInsumosDB.forEach(i => {
+                opcionesInsumos += `<option value="${i.nombre}" data-costo="${i.costo_unitario}">${i.nombre} (Costo: $${i.costo_unitario})</option>`;
+            });
+
+            const html = `
+                <tr id="${rowId}" class="border-b border-slate-800 renglon-item">
+                    <td class="p-2">
+                        <select class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full select-insumo" onchange="seleccionarInsumoCatalogo('${rowId}')">
+                            ${opcionesInsumos}
+                        </select>
+                        <input type="text" placeholder="Insumo o material" class="mt-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs w-full desc-input">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" value="1" min="1" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center cant-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="0.01" value="0.00" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
+                    <td class="p-2 text-right">
+                        <input type="number" step="0.01" value="0.00" class="w-24 bg-slate-800 border border-emerald-500/60 text-emerald-400 font-bold rounded-lg px-2 py-1 text-xs text-right precio-cliente-input" oninput="recalcularPresupuestoTotal()">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', html);
+            recalcularPresupuestoTotal();
+        }
+
+        function seleccionarServicioCatalogo(rowId) {
+            const row = document.getElementById(rowId);
+            const select = row.querySelector('.select-servicio');
+            const selectedOption = select.options[select.selectedIndex];
+            const precio = parseFloat(selectedOption.getAttribute('data-precio')) || 0;
             
-            const sugerido = costo * (1 + (gananciaPct / 100));
-            document.getElementById('calc-sugerido').value = `$${sugerido.toFixed(2)}`;
-            document.getElementById('calc-precio-cliente').value = sugerido.toFixed(2);
-
-            actualizarBolivaresCalculadora(sugerido);
+            row.querySelector('.desc-input').value = select.value;
+            row.querySelector('.costo-input').value = precio;
+            recalcularPresupuestoTotal();
         }
 
-        function calcularPreciosPorCliente() {
-            const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
-            const precioCliente = parseFloat(document.getElementById('calc-precio-cliente').value) || 0;
+        function seleccionarInsumoCatalogo(rowId) {
+            const row = document.getElementById(rowId);
+            const select = row.querySelector('.select-insumo');
+            const selectedOption = select.options[select.selectedIndex];
+            const costo = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+            
+            row.querySelector('.desc-input').value = select.value;
+            row.querySelector('.costo-input').value = costo;
+            recalcularPresupuestoTotal();
+        }
 
-            if(costo > 0) {
-                const nuevaGananciaPct = ((precioCliente - costo) / costo) * 100;
-                document.getElementById('calc-ganancia').value = nuevaGananciaPct.toFixed(1);
+        function recalcularPresupuestoTotal() {
+            let subtotalCostoGlobal = 0;
+            let totalGananciaGlobal = 0;
+            let totalPresupuestoUSD = 0;
+
+            const filas = document.querySelectorAll('.renglon-item');
+            filas.forEach(row => {
+                const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
+                const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
+                const gananciaPct = parseFloat(row.querySelector('.ganancia-input').value) || 0;
+
+                const costoTotalItem = cant * costoUnit;
+                subtotalCostoGlobal += costoTotalItem;
+
+                // Precio sugerido automático por ítem
+                const sugeridoItem = costoTotalItem * (1 + (gananciaPct / 100));
+                row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
+
+                // Input precio cliente final (si está en 0 inicialmente, se setea al sugerido)
+                const clienteInput = row.querySelector('.precio-cliente-input');
+                if(!clienteInput.dataset.modified) {
+                    clienteInput.value = sugeridoItem.toFixed(2);
+                }
+
+                const precioFinalItem = parseFloat(clienteInput.value) || 0;
+                totalPresupuestoUSD += precioFinalItem;
+                totalGananciaGlobal += (precioFinalItem - costoTotalItem);
+            });
+
+            document.getElementById('doc-subtotal-costo').innerText = `$${subtotalCostoGlobal.toFixed(2)}`;
+            document.getElementById('doc-total-ganancia').innerText = `$${totalGananciaGlobal.toFixed(2)}`;
+            document.getElementById('doc-total-usd').innerText = `$${totalPresupuestoUSD.toFixed(2)}`;
+
+            const totalVES = totalPresupuestoUSD * tasaBCV;
+            document.getElementById('doc-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Actualizar textos informativos en el encabezado del documento
+            const selectCliente = document.getElementById('presupuesto-cliente');
+            document.getElementById('doc-cliente-nombre').innerText = selectCliente.options[selectCliente.selectedIndex]?.text || 'Cliente General';
+            document.getElementById('doc-validez-txt').innerText = document.getElementById('presupuesto-validez').value;
+        }
+
+        // Marcar cuando el usuario edita manualmente el precio cliente de un renglón
+        document.addEventListener('input', function(e) {
+            if(e.target.classList.contains('precio-cliente-input')) {
+                e.target.dataset.modified = "true";
+                recalcularPresupuestoTotal();
             }
-            actualizarBolivaresCalculadora(precioCliente);
+        });
+
+        function exportarPDFPresupuesto() {
+            const elemento = document.getElementById('area-impresion-presupuesto');
+            const opt = {
+                margin:       0.5,
+                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().from(elemento).set(opt).save();
         }
 
-        function actualizarBolivaresCalculadora(montoUSD) {
-            const totalVES = montoUSD * tasaBCV;
-            document.getElementById('calc-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-
-        // Factura / Caja con Desglose Múltiple
+        // --- FACTURA / CAJA CON DESGLOSE MÚLTIPLE ---
         let filasPagosCount = 0;
 
         function agregarMetodoPago() {
@@ -476,17 +706,21 @@
             }
         }
 
-        async function cargarClientesEnCaja() {
+        async function cargarClientesEnSelects() {
             if(!supabaseClient) return;
             try {
                 const { data } = await supabaseClient.from('clientes').select('*');
-                const select = document.getElementById('caja-cliente');
-                if(data && select) {
-                    select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
-                    data.forEach(c => {
-                        select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
-                    });
-                }
+                const selects = [document.getElementById('caja-cliente'), document.getElementById('presupuesto-cliente')];
+                selects.forEach(select => {
+                    if(data && select) {
+                        const valorActual = select.value;
+                        select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
+                        data.forEach(c => {
+                            select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+                        });
+                        select.value = valorActual;
+                    }
+                });
             } catch(e) { console.log(e); }
         }
 
@@ -528,7 +762,7 @@
             cargarHistorialVentas();
         }
 
-        // Funciones auxiliares para Supabase (Insumos, Servicios, Clientes, Gastos)
+        // --- SUPABASE CRUD CARGAS ---
         async function guardarInsumo() {
             const nombre = document.getElementById('insumo-nombre').value;
             const categoria = document.getElementById('insumo-categoria').value;
@@ -546,6 +780,7 @@
         async function cargarInsumos() {
             if(!supabaseClient) return;
             const { data } = await supabaseClient.from('insumos').select('*');
+            if(data) listaInsumosDB = data;
             const tbody = document.getElementById('tabla-insumos');
             if(data && tbody) {
                 tbody.innerHTML = data.length ? '' : '<tr><td colspan="5" class="p-4 text-center text-slate-500">Sin insumos registrados.</td></tr>';
@@ -570,6 +805,7 @@
         async function cargarServicios() {
             if(!supabaseClient) return;
             const { data } = await supabaseClient.from('servicios').select('*');
+            if(data) listaServiciosDB = data;
             const tbody = document.getElementById('tabla-servicios');
             if(data && tbody) {
                 tbody.innerHTML = data.length ? '' : '<tr><td colspan="3" class="p-4 text-center text-slate-500">Sin servicios registrados.</td></tr>';
@@ -671,16 +907,14 @@
             }
         }
 
-        // Inicializar al cargar
-        window.onload = function() {
-            fetchBCVRate();
-            calcularPreciosPorGanancia();
-            agregarMetodoPago();
-            cargarInsumos();
-            cargarServicios();
-            cargarClientes();
-            cargarGastos();
-            cargarHistorialVentas();
+        window.onload = async function() {
+            await fetchBCVRate();
+            await cargarInsumos();
+            await cargarServicios();
+            await cargarClientes();
+            await cargarGastos();
+            await cargarHistorialVentas();
+            agregarRenglonServicio(); // Iniciar con una línea de ejemplo
         };
     </script>
 </body>
