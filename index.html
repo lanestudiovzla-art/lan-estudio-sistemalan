@@ -26,14 +26,15 @@
         }
 
         .pdf-mode#area-impresion-presupuesto {
-            border: 2px solid #b88a73 !important;
+            border: none !important;
             box-sizing: border-box !important;
-            width: 740px !important;
-            max-width: 740px !important;
-            min-width: 740px !important;
-            margin: 0 auto !important;
-            padding: 30px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background-color: #ffffff !important;
+            box-shadow: none !important;
         }
 
         .pdf-mode .no-print-pdf {
@@ -175,7 +176,7 @@
                 </div>
 
                 <!-- Contenedor Imprimible del Presupuesto -->
-                <div id="area-impresion-presupuesto" class="bg-white p-8 rounded-2xl border-2 border-[#e8dbd3] space-y-6 shadow-xs max-w-full">
+                <div id="area-impresion-presupuesto" class="bg-white p-8 rounded-2xl border border-[#e8dbd3] space-y-6 shadow-xs max-w-full">
                     
                     <!-- Cabecera del Documento PDF -->
                     <div class="flex justify-between items-start border-b border-[#e8dbd3] pb-6">
@@ -761,11 +762,11 @@
             });
 
             const opt = {
-                margin:       [10, 10, 10, 10],
+                margin:       [0.4, 0.4, 0.4, 0.4],
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 750 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
             html2pdf().from(areaPresupuesto).set(opt).save().then(() => {
