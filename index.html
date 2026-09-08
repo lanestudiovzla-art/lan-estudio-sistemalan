@@ -15,6 +15,28 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        @media print {
+    /* Oculta los botones de añadir, los inputs de acción y la columna de eliminar */
+    button, 
+    .btn, 
+    th:last-child, 
+    td:last-child, 
+    .acciones-col {
+        display: none !important;
+    }
+
+    /* Quita el diseño de "cajita" o input para que los textos y números se lean planos en el PDF */
+    input, select {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        appearance: none;
+        -webkit-appearance: none;
+        color: inherit !important;
+    }
+}
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
