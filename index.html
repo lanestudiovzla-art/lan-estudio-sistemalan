@@ -13,11 +13,6 @@
     <!-- html2pdf para exportar presupuestos en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-
         @media print {
             body * {
                 visibility: hidden !important;
@@ -758,19 +753,46 @@
                 }
             }
         }
+function exportarPDFPresupuesto() {
+    const elemento = document.getElementById('area-impresion-presupuesto');
+    
+    // 1. Guardamos una copia del HTML original para restaurarlo después
+    const htmlOriginal = elemento.innerHTML;
 
-        function exportarPDFPresupuesto() {
-            const elemento = document.getElementById('area-impresion-presupuesto');
-            const opt = {
-                margin:       0.5,
-                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().from(elemento).set(opt).save();
-        }
+    // 2. Creamos una versión limpia temporalmente solo para el PDF del cliente
+    // Ocultamos botones, filas de acción, y convertimos inputs en texto plano
+    const clone = elemento.cloneNode(true);
+    
+    // Ocultar elementos administrativos dentro del clon
+    const elementosAOcultar = clone.querySelectorAll('button, .btn, th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(7), td:nth-child(7), #doc-subtotal-costo, #doc-total-ganancia');
+    elementosAOcultar.forEach(el => el.remove());
 
+    // Limpiar inputs para que se lean como texto plano y formal
+    const inputs = clone.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        const span = document.createElement('span');
+        span.innerText = input.value || input.innerText || '';
+        span.style.fontWeight = '500';
+        span.style.color = '#1e293b';
+        input.parentNode.replaceChild(span, input);
+    });
+
+    // Cambiar temporalmente el contenedor a fondo blanco impecable para el cliente
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.color = '#1e293b';
+    clone.style.padding = '20px';
+
+    const opt = {
+        margin:       0.5,
+        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Generamos el PDF con el diseño limpio corporativo
+    html2pdf().from(clone).set(opt).save();
+}
         // --- FACTURA / CAJA CON DESGLOSE MÚLTIPLE ---
         let filasPagosCount = 0;
 
