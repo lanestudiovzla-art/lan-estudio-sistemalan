@@ -693,13 +693,14 @@
             // Añadir clase para ocultar elementos de control
             elemento.classList.add('en-modo-pdf');
 
-        const opt = {
-      margin:       [0.5, 0.5, 0.5, 0.5],
-      filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
             html2pdf().from(elemento).set(opt).save().then(() => {
                 elemento.classList.remove('en-modo-pdf');
             });
