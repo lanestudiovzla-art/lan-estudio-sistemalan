@@ -28,11 +28,11 @@
         .pdf-mode#area-impresion-presupuesto {
             border: 2px solid #b88a73 !important;
             box-sizing: border-box !important;
-            width: 794px !important;
-            max-width: 794px !important;
-            min-width: 794px !important;
+            width: 740px !important;
+            max-width: 740px !important;
+            min-width: 740px !important;
             margin: 0 auto !important;
-            padding: 40px !important;
+            padding: 30px !important;
             background-color: #ffffff !important;
         }
 
@@ -761,7 +761,7 @@
             });
 
             const opt = {
-                margin:       0,
+                margin:       [10, 10, 10, 10],
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
