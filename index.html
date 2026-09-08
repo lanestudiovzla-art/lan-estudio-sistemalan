@@ -16,23 +16,27 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #faf8f6; color: #2c2c2c; }
 
-        /* Estilos definitivos para el PDF corregidos de raíz */
+        /* Estilos definitivos para el PDF con estructura fija infalible */
         .en-modo-pdf .no-print-controls { display: none !important; }
         .en-modo-pdf .internal-col { display: none !important; }
         
-        .en-modo-pdf table { width: 100% !important; table-layout: fixed !important; }
-        .en-modo-pdf th:nth-child(1), .en-modo-pdf td:nth-child(1) { width: 70% !important; word-break: break-word !important; }
-        .en-modo-pdf th:nth-child(2), .en-modo-pdf td:nth-child(2) { width: 15% !important; text-align: center !important; }
-        .en-modo-pdf th:nth-child(6), .en-modo-pdf td:nth-child(6) { width: 15% !important; text-align: right !important; }
+        .en-modo-pdf table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
+        .en-modo-pdf th, .en-modo-pdf td { box-sizing: border-box !important; overflow: hidden !important; }
+        
+        /* Forzar anchos exactos en celdas visibles para evitar colapso de descripción */
+        .en-modo-pdf th:nth-child(1), .en-modo-pdf td:nth-child(1) { width: 70% !important; display: table-cell !important; }
+        .en-modo-pdf th:nth-child(2), .en-modo-pdf td:nth-child(2) { width: 15% !important; display: table-cell !important; text-align: center !important; }
+        .en-modo-pdf th:nth-child(6), .en-modo-pdf td:nth-child(6) { width: 15% !important; display: table-cell !important; text-align: right !important; }
 
         .en-modo-pdf input, .en-modo-pdf select {
             border: none !important;
             background: transparent !important;
             padding: 0 !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             color: #2c2c2c !important;
             appearance: none;
             outline: none !important;
+            box-shadow: none !important;
         }
         .en-modo-pdf .desc-input {
             display: block !important;
@@ -43,6 +47,8 @@
             color: #b88a73 !important;
             font-weight: bold !important;
             text-align: right !important;
+            display: block !important;
+            width: 100% !important;
         }
     </style>
 </head>
@@ -214,12 +220,12 @@
                             <table class="w-full text-left text-xs text-gray-700">
                                 <thead class="bg-[#faf8f6] text-xs uppercase text-gray-500 border-b border-[#e8dbd3]">
                                     <tr>
-                                        <th class="p-3 w-[38%]">Descripción / Concepto</th>
-                                        <th class="p-3 w-[12%] text-center">Cant</th>
+                                        <th class="p-3 w-[70%]">Descripción / Concepto</th>
+                                        <th class="p-3 w-[15%] text-center">Cant</th>
                                         <th class="p-3 w-[14%] text-center internal-col">Costo Unit. ($)</th>
                                         <th class="p-3 w-[12%] text-center internal-col">% Ganancia</th>
                                         <th class="p-3 w-[14%] text-right internal-col">Precio Sug. ($)</th>
-                                        <th class="p-3 w-[18%] text-right font-bold text-[#b88a73]">Precio Final ($)</th>
+                                        <th class="p-3 w-[15%] text-right font-bold text-[#b88a73]">Precio Final ($)</th>
                                         <th class="p-3 w-[10%] text-center no-print-controls">Acción</th>
                                     </tr>
                                 </thead>
@@ -554,13 +560,13 @@
 
             const html = `
                 <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
-                    <td class="p-3 w-[38%]">
+                    <td class="p-3 w-[70%]">
                         <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1.5 py-1 text-[11px] w-full select-servicio no-print-controls mb-1 truncate" onchange="seleccionarServicioCatalogo('${rowId}')">
                             ${opcionesServicios}
                         </select>
                         <input type="text" value="${nombreDefault}" placeholder="Descripción" class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1.5 text-xs w-full desc-input font-medium">
                     </td>
-                    <td class="p-3 w-[12%] text-center align-middle">
+                    <td class="p-3 w-[15%] text-center align-middle">
                         <input type="number" value="1" min="1" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-3 w-[14%] text-center align-middle internal-col">
@@ -570,7 +576,7 @@
                         <input type="number" step="1" value="${gananciaGlobal}" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-3 w-[14%] text-right text-[#b88a73] font-semibold sugerido-txt align-middle internal-col truncate">$0.00</td>
-                    <td class="p-3 w-[18%] text-right align-middle">
+                    <td class="p-3 w-[15%] text-right align-middle">
                         <input type="number" step="0.01" value="0.00" class="w-full bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-1.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
                     <td class="p-3 w-[10%] text-center align-middle no-print-controls">
@@ -595,13 +601,13 @@
 
             const html = `
                 <tr id="${rowId}" class="border-b border-[#e8dbd3] renglon-item">
-                    <td class="p-3 w-[38%]">
+                    <td class="p-3 w-[70%]">
                         <select class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1.5 py-1 text-[11px] w-full select-insumo no-print-controls mb-1 truncate" onchange="seleccionarInsumoCatalogo('${rowId}')">
                             ${opcionesInsumos}
                         </select>
                         <input type="text" placeholder="Insumo" class="bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-2 py-1.5 text-xs w-full desc-input font-medium">
                     </td>
-                    <td class="p-3 w-[12%] text-center align-middle">
+                    <td class="p-3 w-[15%] text-center align-middle">
                         <input type="number" value="1" min="1" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center cant-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-3 w-[14%] text-center align-middle internal-col">
@@ -611,7 +617,7 @@
                         <input type="number" step="1" value="${gananciaGlobal}" class="w-full bg-white border border-[#e8dbd3] text-[#2c2c2c] rounded-lg px-1 py-1.5 text-xs text-center ganancia-input font-medium" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-3 w-[14%] text-right text-[#b88a73] font-semibold sugerido-txt align-middle internal-col truncate">$0.00</td>
-                    <td class="p-3 w-[18%] text-right align-middle">
+                    <td class="p-3 w-[15%] text-right align-middle">
                         <input type="number" step="0.01" value="0.00" class="w-full bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-1.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
                     <td class="p-3 w-[10%] text-center align-middle no-print-controls">
