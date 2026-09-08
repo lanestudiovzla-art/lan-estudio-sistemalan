@@ -28,11 +28,11 @@
         .pdf-mode#area-impresion-presupuesto {
             border: 2px solid #b88a73 !important;
             box-sizing: border-box !important;
-            width: 700px !important;
-            max-width: 700px !important;
-            min-width: 700px !important;
+            width: 794px !important;
+            max-width: 794px !important;
+            min-width: 794px !important;
             margin: 0 auto !important;
-            padding: 24px !important;
+            padding: 40px !important;
             background-color: #ffffff !important;
         }
 
@@ -761,11 +761,11 @@
             });
 
             const opt = {
-                margin:       [0.4, 0.4, 0.4, 0.4],
+                margin:       0,
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 750 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().from(areaPresupuesto).set(opt).save().then(() => {
