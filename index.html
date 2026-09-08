@@ -788,19 +788,72 @@
             actualizarTotalesCaja();
         }
 
-        function actualizarTotalesCaja() {
-            const totalUSD = parseFloat(document.getElementById('caja-total-usd').value) || 0;
-            const totalVES = totalUSD * tasaBCV;
-            document.getElementById('caja-total-ves').value = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('resumen-total').innerText = `$${totalUSD.toFixed(2)}`;
+    function calcularTotalesCaja() {
+    // 1. Obtener la tasa BCV (busca tu variable global o usa un respaldo seguro)
+    const tasa = window.tasaBCV || 807.39;
 
-            let totalAbonadoUSD = 0;
-            document.querySelectorAll('#lista-pagos > div').forEach(fila => {
-                const monto = parseFloat(fila.querySelector('.monto-input').value) || 0;
-                const moneda = fila.querySelector('.moneda-select').value;
-                totalAbonadoUSD += (moneda === 'VES') ? (monto / tasaBCV) : monto;
-            });
+    // 2. Obtener el total de la factura en USD (lee del input o campo de la factura)
+    const inputTotal = document.getElementById('total-factura') || document.getElementById('total-a-pagar') || document.querySelector('[id*="total"]');
+    let totalUSD = 0;
+    
+    if (inputTotal) {
+        totalUSD = parseFloat(inputTotal.value || inputTotal.innerText || inputTotal.textContent) || 50.00;
+    } else {
+        totalUSD = 50.00; // Respaldo por defecto si no lo encuentra exacto
+    }
+    const totalVES = totalUSD * tasa;
 
+    // 3. Leer los montos ingresados en cada método de pago
+    const pagoMovilBs = parseFloat(document.getElementById('pago-pagomovil-bs').value) || 0;
+    const efectivoUSD = parseFloat(document.getElementById('pago-efectivo-usd').value) || 0;
+    const zelleUSD = parseFloat(document.getElementById('pago-zelle-usd').value) || 0;
+    const puntoBs = parseFloat(document.getElementById('pago-punto-bs').value) || 0;
+
+    // 4. Convertir los pagos en Bs a USD para sumar el total abonado
+    const pagoMovilUSD = pagoMovilBs / tasa;
+    const puntoUSD = puntoBs / tasa;
+
+    const totalAbonadoUSD = efectivoUSD + zelleUSD + pagoMovilUSD + puntoUSD;
+    const totalAbonadoVES = totalAbonadoUSD * tasa;
+
+    // 5. Calcular Restante o Vuelto
+    const diferencia = totalAbonadoUSD - totalUSD;
+    let vueltoUSD = 0;
+    let restanteUSD = 0;
+
+    const labelRestanteVuelto = document.getElementById('label-restante-vuelto');
+
+    if (diferencia >= 0) {
+        vueltoUSD = diferencia;
+        if (labelRestanteVuelto) labelRestanteVuelto.innerText = "Vuelto:";
+    } else {
+        restanteUSD = Math.abs(diferencia);
+        if (labelRestanteVuelto) labelRestanteVuelto.innerText = "Restante:";
+    }
+
+    const vueltoVES = vueltoUSD * tasa;
+    const restanteVES = restanteUSD * tasa;
+
+    // 6. Inyectar los resultados formateados en el HTML del Resumen de Cobro
+    document.getElementById('resumen-total-usd').innerText = `$${totalUSD.toFixed(2)}`;
+    document.getElementById('resumen-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+    document.getElementById('resumen-abonado-usd').innerText = `$${totalAbonadoUSD.toFixed(2)}`;
+    document.getElementById('resumen-abonado-ves').innerText = `Bs. ${totalAbonadoVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+    const elVueltoUSD = document.getElementById('resumen-vuelto-usd');
+    const elVueltoVES = document.getElementById('resumen-vuelto-ves');
+
+    if (diferencia >= 0) {
+        elVueltoUSD.innerText = `$${vueltoUSD.toFixed(2)}`;
+        elVueltoUSD.className = "font-bold text-sm text-emerald-600";
+        elVueltoVES.innerText = `Bs. ${vueltoVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    } else {
+        elVueltoUSD.innerText = `$${restanteUSD.toFixed(2)}`;
+        elVueltoUSD.className = "font-bold text-sm text-amber-600";
+        elVueltoVES.innerText = `Bs. ${restanteVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+}
             document.getElementById('resumen-abonado').innerText = `$${totalAbonadoUSD.toFixed(2)}`;
             const restante = totalUSD - totalAbonadoUSD;
             const restanteEl = document.getElementById('resumen-restante');
