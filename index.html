@@ -119,36 +119,45 @@
                 </div>
 
                 <!-- Datos del Cliente y Configuración del Presupuesto -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Cliente Destino</label>
-                        <select id="presupuesto-cliente" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" onchange="recalcularPresupuestoTotal()">
-                            <option value="Cliente General">-- Seleccionar Cliente CRM --</option>
-                        </select>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Cliente Destino (CRM / Nuevo)</label>
+                        <div class="flex space-x-1">
+                            <input type="text" id="presupuesto-cliente" list="crm-clientes-list" placeholder="Selecciona o escribe..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
+                            <datalist id="crm-clientes-list">
+                                <!-- Inyectado por JS -->
+                            </datalist>
+                            <button onclick="agregarClienteRapidoDesdeCotizador()" title="Guardar este cliente nuevo en el CRM" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs transition"><i class="fa-solid fa-user-plus"></i></button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Validez del Presupuesto</label>
                         <input type="text" id="presupuesto-validez" value="7 días hábiles" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">% de Ganancia Global por Defecto</label>
-                        <input type="number" id="presupuesto-ganancia-global" value="30" step="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="recalcularPresupuestoTotal()">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">% Ganancia Global por Defecto</label>
+                        <input type="number" id="presupuesto-ganancia-global" value="30" step="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" oninput="aplicarGananciaGlobalATodo()">
+                    </div>
+                    <div class="flex flex-col justify-end">
+                        <label class="flex items-center space-x-2 cursor-pointer py-2">
+                            <input type="checkbox" id="check-mostrar-tasa" checked onchange="recalcularPresupuestoTotal()" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+                            <span class="text-xs text-slate-300 font-medium">Mostrar Tasa BCV en PDF</span>
+                        </label>
                     </div>
                 </div>
 
                 <!-- Contenedor Imprimible del Presupuesto (Diseño PDF) -->
                 <div id="area-impresion-presupuesto" class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-6">
-                    <!-- Cabecera del Documento PDF -->
+                    <!-- Cabecera del Documento PDF (Sin RIF) -->
                     <div class="flex justify-between items-start border-b border-slate-800 pb-4">
                         <div>
                             <h3 class="text-xl font-bold text-white tracking-wide">LAN ESTUDIO</h3>
                             <p class="text-xs text-slate-400">Agencia de Publicidad y Comunicación</p>
-                            <p class="text-xs text-slate-400 mt-1">Rif / NIT: J-XXXXXXXX-X</p>
                         </div>
                         <div class="text-right">
                             <h4 class="text-sm font-bold text-indigo-400 uppercase tracking-widest">PRESUPUESTO</h4>
                             <p id="presupuesto-fecha-doc" class="text-xs text-slate-400 mt-1">Fecha: --/--/----</p>
-                            <p class="text-xs text-slate-400">Ref Tasa BCV: <span id="presupuesto-tasa-doc" class="text-emerald-400 font-semibold">0.00</span></p>
+                            <p id="contenedor-tasa-doc" class="text-xs text-slate-400">Ref Tasa BCV: <span id="presupuesto-tasa-doc" class="text-emerald-400 font-semibold">0.00</span></p>
                         </div>
                     </div>
 
@@ -162,7 +171,7 @@
                         </div>
                     </div>
 
-                    <!-- Tabla de Renglones / Ítems del Presupuesto -->
+                    <!-- Tabla de Renglones / Ítems del Presupuesto con Doble Columna Editable -->
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ítems, Servicios e Insumos a Presupuestar</h4>
@@ -180,8 +189,8 @@
                                         <th class="p-2.5 text-center">Cant</th>
                                         <th class="p-2.5 text-center">Costo Unit. ($)</th>
                                         <th class="p-2.5 text-center">% Ganancia</th>
-                                        <th class="p-2.5 text-right">Precio Sugerido ($)</th>
-                                        <th class="p-2.5 text-right font-bold text-emerald-400">Precio Cliente Final ($)</th>
+                                        <th class="p-2.5 text-right font-indigo text-indigo-300">Precio Sugerido ($)</th>
+                                        <th class="p-2.5 text-right font-bold text-emerald-400">Precio Cliente ($)</th>
                                         <th class="p-2.5 text-center">Acción</th>
                                     </tr>
                                 </thead>
@@ -200,7 +209,7 @@
                                 <span id="doc-subtotal-costo" class="font-bold text-white">$0.00</span>
                             </div>
                             <div class="flex justify-between text-slate-400 text-xs">
-                                <span>Ganancia Total Estimada:</span>
+                                <span>Ganancia Total Real:</span>
                                 <span id="doc-total-ganancia" class="font-bold text-indigo-400">$0.00</span>
                             </div>
                             <div class="flex justify-between border-t border-slate-700 pt-2 text-base font-bold text-white">
@@ -432,6 +441,7 @@
         let tasaBCV = 807.39;
         let listaInsumosDB = [];
         let listaServiciosDB = [];
+        let listaClientesDB = [];
 
         function switchTab(tabId) {
             ['dashboard', 'calculadora', 'caja', 'insumos', 'servicios', 'crm', 'finanzas', 'logo'].forEach(t => {
@@ -445,12 +455,10 @@
             if(activeEl) activeEl.classList.remove('hidden');
             if(activeBtn) activeBtn.className = "px-4 py-2 rounded-lg font-medium text-sm bg-indigo-600 text-white transition shadow";
 
-            if(tabId === 'caja') {
-                actualizarTotalesCaja();
+            if(tabId === 'caja' || tabId === 'calculadora') {
                 cargarClientesEnSelects();
             }
             if(tabId === 'calculadora') {
-                cargarClientesEnSelects();
                 document.getElementById('presupuesto-fecha-doc').innerText = `Fecha: ${new Date().toLocaleDateString()}`;
                 document.getElementById('presupuesto-tasa-doc').innerText = `Bs. ${tasaBCV.toFixed(2)}`;
             }
@@ -508,7 +516,7 @@
                         <input type="number" step="0.01" value="${costoDefault}" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="actualizarFilaPorGananciaIndividual('${rowId}')">
                     </td>
                     <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
                     <td class="p-2 text-right">
@@ -549,7 +557,7 @@
                         <input type="number" step="0.01" value="0.00" class="w-20 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center costo-input" oninput="recalcularPresupuestoTotal()">
                     </td>
                     <td class="p-2 text-center">
-                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="recalcularPresupuestoTotal()">
+                        <input type="number" step="1" value="${gananciaGlobal}" class="w-16 bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs text-center ganancia-input" oninput="actualizarFilaPorGananciaIndividual('${rowId}')">
                     </td>
                     <td class="p-2 text-right text-indigo-300 font-semibold sugerido-txt">$0.00</td>
                     <td class="p-2 text-right">
@@ -586,6 +594,35 @@
             recalcularPresupuestoTotal();
         }
 
+        function actualizarFilaPorGananciaIndividual(rowId) {
+            const row = document.getElementById(rowId);
+            const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
+            const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
+            const gananciaPct = parseFloat(row.querySelector('.ganancia-input').value) || 0;
+
+            const costoTotalItem = cant * costoUnit;
+            const sugeridoItem = costoTotalItem * (1 + (gananciaPct / 100));
+            
+            row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
+            row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
+            recalcularPresupuestoTotal();
+        }
+
+        function aplicarGananciaGlobalATodo() {
+            const gananciaGlobal = parseFloat(document.getElementById('presupuesto-ganancia-global').value) || 30;
+            document.querySelectorAll('.renglon-item').forEach(row => {
+                row.querySelector('.ganancia-input').value = gananciaGlobal;
+                const cant = parseFloat(row.querySelector('.cant-input').value) || 0;
+                const costoUnit = parseFloat(row.querySelector('.costo-input').value) || 0;
+                const costoTotalItem = cant * costoUnit;
+                const sugeridoItem = costoTotalItem * (1 + (gananciaGlobal / 100));
+                
+                row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
+                row.querySelector('.precio-cliente-input').value = sugeridoItem.toFixed(2);
+            });
+            recalcularPresupuestoTotal();
+        }
+
         function recalcularPresupuestoTotal() {
             let subtotalCostoGlobal = 0;
             let totalGananciaGlobal = 0;
@@ -600,17 +637,12 @@
                 const costoTotalItem = cant * costoUnit;
                 subtotalCostoGlobal += costoTotalItem;
 
-                // Precio sugerido automático por ítem
                 const sugeridoItem = costoTotalItem * (1 + (gananciaPct / 100));
                 row.querySelector('.sugerido-txt').innerText = `$${sugeridoItem.toFixed(2)}`;
 
-                // Input precio cliente final (si está en 0 inicialmente o no ha sido modificado intencionalmente, se setea al sugerido)
                 const clienteInput = row.querySelector('.precio-cliente-input');
-                if(!clienteInput.dataset.modified) {
-                    clienteInput.value = sugeridoItem.toFixed(2);
-                }
-
                 const precioFinalItem = parseFloat(clienteInput.value) || 0;
+                
                 totalPresupuestoUSD += precioFinalItem;
                 totalGananciaGlobal += (precioFinalItem - costoTotalItem);
             });
@@ -622,19 +654,36 @@
             const totalVES = totalPresupuestoUSD * tasaBCV;
             document.getElementById('doc-total-ves').innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-            // Actualizar textos informativos en el encabezado del documento
-            const selectCliente = document.getElementById('presupuesto-cliente');
-            document.getElementById('doc-cliente-nombre').innerText = selectCliente.options[selectCliente.selectedIndex]?.text || 'Cliente General';
+            // Control visual de la tasa BCV en el documento PDF
+            const mostrarTasa = document.getElementById('check-mostrar-tasa').checked;
+            const contenedorTasaDoc = document.getElementById('contenedor-tasa-doc');
+            if(mostrarTasa) {
+                contenedorTasaDoc.classList.remove('hidden');
+            } else {
+                contenedorTasaDoc.classList.add('hidden');
+            }
+
+            // Actualizar nombre del cliente en el documento impreso
+            const nombreClienteInput = document.getElementById('presupuesto-cliente').value.trim();
+            document.getElementById('doc-cliente-nombre').innerText = nombreClienteInput !== '' ? nombreClienteInput : 'Cliente General';
             document.getElementById('doc-validez-txt').innerText = document.getElementById('presupuesto-validez').value;
         }
 
-        // Marcar cuando el usuario edita manualmente el precio cliente de un renglón
-        document.addEventListener('input', function(e) {
-            if(e.target.classList.contains('precio-cliente-input')) {
-                e.target.dataset.modified = "true";
-                recalcularPresupuestoTotal();
+        async function agregarClienteRapidoDesdeCotizador() {
+            const nombreInput = document.getElementById('presupuesto-cliente').value.trim();
+            if(!nombreInput || nombreInput === 'Cliente General') {
+                return alert("Escribe un nombre de cliente válido para agregarlo al CRM.");
             }
-        });
+            if(supabaseClient) {
+                const { error } = await supabaseClient.from('clientes').insert([{ nombre: nombreInput }]);
+                if(!error) {
+                    alert(`¡Cliente "${nombreInput}" guardado en el CRM con éxito!`);
+                    cargarClientesEnSelects();
+                } else {
+                    alert("Error al guardar en el CRM (puede que ya exista).");
+                }
+            }
+        }
 
         function exportarPDFPresupuesto() {
             const elemento = document.getElementById('area-impresion-presupuesto');
@@ -710,17 +759,28 @@
             if(!supabaseClient) return;
             try {
                 const { data } = await supabaseClient.from('clientes').select('*');
-                const selects = [document.getElementById('caja-cliente'), document.getElementById('presupuesto-cliente')];
-                selects.forEach(select => {
-                    if(data && select) {
-                        const valorActual = select.value;
-                        select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
+                if(data) {
+                    listaClientesDB = data;
+                    // Llenar select de Caja
+                    const selectCaja = document.getElementById('caja-cliente');
+                    if(selectCaja) {
+                        const valorActual = selectCaja.value;
+                        selectCaja.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
                         data.forEach(c => {
-                            select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+                            selectCaja.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
                         });
-                        select.value = valorActual;
+                        selectCaja.value = valorActual;
                     }
-                });
+
+                    // Llenar datalist del Cotizador
+                    const datalistCotizador = document.getElementById('crm-clientes-list');
+                    if(datalistCotizador) {
+                        datalistCotizador.innerHTML = '';
+                        data.forEach(c => {
+                            datalistCotizador.innerHTML += `<option value="${c.nombre}">`;
+                        });
+                    }
+                }
             } catch(e) { console.log(e); }
         }
 
@@ -838,6 +898,7 @@
                 });
                 document.getElementById('dash-clientes').innerText = data.length;
             }
+            cargarClientesEnSelects();
         }
 
         async function guardarGasto() {
