@@ -754,43 +754,174 @@
             }
         }
 function exportarPDFPresupuesto() {
-    const elemento = document.getElementById('area-impresion-presupuesto');
+    const elementoOriginal = document.getElementById('area-impresion-presupuesto');
+    const clone = document.createElement('div');
     
-    // Creamos un clon exacto del área de impresión para manipularlo sin afectar la pantalla
-    const clone = elemento.cloneNode(true);
-    
-    // 1. Ocultamos botones, filas de acción, elementos internos y específicamente la tasa BCV
-    const elementosAOcultar = clone.querySelectorAll('button, .btn, #añadir-servicio, #añadir-insumo, .fa-trash, th:nth-of-type(3), td:nth-of-type(3), th:nth-of-type(4), td:nth-of-type(4), th:nth-of-type(5), td:nth-of-type(5), th:nth-of-type(7), td:nth-of-type(7), span:has-text("Tasa BCV"), p:has-text("Tasa BCV"), div:has-text("Tasa BCV")');
+    // Estilos base para la página del cliente (Fondo blanco impecable y tipografía limpia)
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.color = '#2c2c2c';
+    clone.style.padding = '40px';
+    clone.style.fontFamily = "'Inter', system-ui, -apple-system, sans-serif";
+    clone.style.boxSizing = 'border-box';
+
+    // --- 1. ENCABEZADO CON EL LOGO Y ESTILO CORPORATIVO ---
+    const headerDiv = document.createElement('div');
+    headerDiv.style.display = 'flex';
+    headerDiv.style.justifyContent = 'space-between';
+    headerDiv.style.alignItems = 'center';
+    headerDiv.style.borderBottom = '2px solid #b88a73'; // Línea fina con el color terracota del logo
+    headerDiv.style.paddingBottom = '25px';
+    headerDiv.style.marginBottom = '30px';
+
+    headerDiv.innerHTML = `
+        <div>
+            <!-- AQUÍ PUEDES USAR LA URL DE TU LOGO (o guardarlo en tu repositorio y poner su ruta) -->
+            <img src="URL_DE_TU_LOGO_AQUÍ.png" alt="LAN ESTUDIO" style="max-height: 55px; object-fit: contain; display: block; margin-bottom: 6px;">
+            <p style="font-size: 11px; color: #888888; margin: 0; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Agencia de Publicidad y Comunicación</p>
+        </div>
+        <div style="text-align: right;">
+            <h2 style="font-size: 22px; color: #2c2c2c; font-weight: 700; margin: 0; letter-spacing: 0.5px;">PRESUPUESTO</h2>
+            <p style="font-size: 12px; color: #666666; margin: 4px 0 0 0; font-weight: 500;">Fecha: ${new Date().toLocaleDateString('es-VE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+        </div>
+    `;
+    clone.appendChild(headerDiv);
+
+    // --- 2. INFORMACIÓN DEL CLIENTE ---
+    const clienteSpan = elementoOriginal.querySelector('#doc-cliente, [id*="cliente"]') || elementoOriginal.querySelector('span:contains("Preparado para")');
+    const nombreCliente = clienteSpan ? clienteSpan.innerText.replace('Preparado para:', '').trim() : 'Cliente General';
+
+    const clientBar = document.createElement('div');
+    clientBar.style.backgroundColor = '#faf8f6'; // Fondo ultra suave armonizado
+    clientBar.style.border = '1px solid #eee5e0';
+    clientBar.style.borderRadius = '6px';
+    clientBar.style.padding = '14px 20px';
+    clientBar.style.marginBottom = '30px';
+    clientBar.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: #b88a73; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Preparado para:</span>
+            <span style="font-size: 15px; color: #2c2c2c; font-weight: 600;">${nombreCliente}</span>
+        </div>
+    `;
+    clone.appendChild(clientBar);
+
+    // --- 3. TABLA DE ÍTEMS LIMPIA Y ELEGANTE ---
+    const tablaContainer = document.createElement('div');
+    tablaContainer.style.marginBottom = '40px';
+
+    // Limpiar estructura de la tabla (ocultar botones y columnas internas/BCV)
+    const elementosAOcultar = clone.querySelectorAll('button, .btn, #añadir-servicio, #añadir-insumo, .fa-trash, th:nth-of-type(3), td:nth-of-type(3), th:nth-of-type(4), td:nth-of-type(4), th:nth-of-type(5), td:nth-of-type(5), th:nth-of-type(7), td:nth-of-type(7), .text-emerald-400');
     elementosAOcultar.forEach(el => el.remove());
 
-    // Buscamos de manera más amplia cualquier texto que mencione la tasa BCV en el clon para borrarlo
-    const spans = clone.querySelectorAll('span, p, div');
-    spans.forEach(s => {
-        if (s.innerText && (s.innerText.includes('Tasa BCV') || s.innerText.includes('Ref Tasa BCV'))) {
-            s.remove();
-        }
-    });
+    let htmlTabla = `
+        <h4 style="font-size: 12px; color: #b88a73; text-transform: uppercase; margin: 0 0 12px 0; font-weight: 700; letter-spacing: 1px;">Detalle de Servicios</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #2c2c2c; color: #ffffff; text-align: left;">
+                    <th style="padding: 12px 15px; border-top-left-radius: 6px; font-weight: 600; letter-spacing: 0.5px;">Descripción / Concepto</th>
+                    <th style="padding: 12px 15px; text-align: center; width: 70px; font-weight: 600;">Cant</th>
+                    <th style="padding: 12px 15px; text-align: right; width: 120px; border-top-right-radius: 6px; font-weight: 600;">Precio Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
 
-    // 2. Limpiamos los selects y inputs para que se muestren como texto plano formal y limpio
-    const selects = clone.querySelectorAll('select');
-    selects.forEach(select => {
-        const textoSeleccionado = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
-        const span = document.createElement('span');
-        span.innerText = textoSeleccionado.replace(/-- Seleccionar.*?--/g, '').replace(/\(Costo:.*?\)/g, '').trim() || 'Servicio';
-        span.style.fontWeight = '500';
-        span.style.color = '#1e293b';
-        select.parentNode.replaceChild(span, select);
-    });
+    const tablaReal = elementoOriginal.querySelector('table');
+    let subtotalCalculado = 0;
 
-    const inputs = clone.querySelectorAll('input');
-    inputs.forEach(input => {
-        const span = document.createElement('span');
-        span.innerText = input.value || '0.00';
-        span.style.fontWeight = '600';
-        span.style.color = '#1e293b';
-        input.parentNode.replaceChild(span, input);
-    });
+    if (tablaReal) {
+        const trs = tablaReal.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const select = tr.querySelector('select');
+            const inputCant = tr.querySelector('input[type="number"], input');
+            
+            let nombreServicio = '';
+            if (select && select.selectedIndex > 0) {
+                nombreServicio = select.options[select.selectedIndex].text.split('($)')[0]
+                                          .replace('-- Seleccionar Servicio del Catálogo --', '')
+                                          .replace('-- Seleccionar Insumo del Stock --', '')
+                                          .replace(/\(Costo:.*?\)/g, '')
+                                          .trim();
+            } else {
+                const descInput = tr.querySelector('input[type="text"]');
+                nombreServicio = descInput ? descInput.value : (tr.cells[0] ? tr.cells[0].innerText : '');
+            }
 
+            if (nombreServicio && nombreServicio !== '') {
+                const cantidad = inputCant ? parseFloat(inputCant.value) || 1 : 1;
+                
+                let precioFila = 0;
+                const inputPrecio = tr.querySelector('td:nth-last-child(2) input');
+                const spanPrecio = tr.querySelector('.precio-cliente, td:nth-last-child(2) span, td:nth-of-type(6)');
+
+                if (inputPrecio) {
+                    precioFila = parseFloat(inputPrecio.value) || 0;
+                } else if (spanPrecio) {
+                    precioFila = parseFloat(spanPrecio.innerText.replace('$', '').replace(',', '.')) || 0;
+                }
+
+                subtotalCalculado += precioFila;
+
+                htmlTabla += `
+                    <tr style="border-bottom: 1px solid #f0ede9;">
+                        <td style="padding: 14px 15px; color: #333333; font-weight: 500; line-height: 1.4;">${nombreServicio}</td>
+                        <td style="padding: 14px 15px; color: #666666; text-align: center;">${cantidad}</td>
+                        <td style="padding: 14px 15px; color: #2c2c2c; text-align: right; font-weight: 600;">$${precioFila.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    htmlTabla += `
+            </tbody>
+        </table>
+    `;
+
+    tablaContainer.innerHTML = htmlTabla;
+    clone.appendChild(tablaContainer);
+
+    // --- 4. TOTAL A PAGAR RESALTADO CON EL TONO TERRACOTA DEL LOGO ---
+    let montoTotalFinal = subtotalCalculado.toFixed(2);
+    const spanTotalInterfaz = elementoOriginal.querySelector('#total-presupuesto, .text-emerald-400');
+    if (spanTotalInterfaz && spanTotalInterfaz.innerText.replace('$', '').trim() !== '0.00') {
+        montoTotalFinal = spanTotalInterfaz.innerText.replace('$', '').replace(',', '.').trim();
+    }
+
+    const totalContainer = document.createElement('div');
+    totalContainer.style.display = 'flex';
+    totalContainer.style.justifyContent = 'flex-end';
+    totalContainer.innerHTML = `
+        <div style="text-align: right; background-color: #faf8f6; border: 1px solid #e8dbd3; border-radius: 6px; padding: 15px 25px;">
+            <span style="font-size: 11px; color: #b88a73; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block;">Total a Pagar:</span>
+            <div style="font-size: 26px; font-weight: 800; color: #2c2c2c; margin-top: 4px; letter-spacing: -0.5px;">$${montoTotalFinal}</div>
+        </div>
+    `;
+    clone.appendChild(totalContainer);
+    
+    // --- 5. PIE DE PÁGINA PROFESIONAL ---
+    const footerDiv = document.createElement('div');
+    footerDiv.style.marginTop = '60px';
+    footerDiv.style.borderTop = '1px solid #eeeeee';
+    footerDiv.style.paddingTop = '20px';
+    footerDiv.style.textAlign = 'center';
+    footerDiv.style.color = '#888888';
+    footerDiv.style.fontSize = '11px';
+    footerDiv.innerHTML = `
+        <p style="margin: 0 0 4px 0; font-weight: 600; color: #555555; letter-spacing: 0.5px;">LAN ESTUDIO · Agencia de Publicidad y Comunicación</p>
+        <p style="margin: 0;">¡Gracias por confiar en nosotros!</p>
+    `;
+    clone.appendChild(footerDiv);
+
+    const opt = {
+        margin:       [0.5, 0.5, 0.5, 0.5],
+        filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().from(clone).set(opt).save();
+}
     // 3. Estilo corporativo limpio y fondo blanco para el PDF del cliente
     clone.style.backgroundColor = '#ffffff';
     clone.style.color = '#1e293b';
