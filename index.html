@@ -26,6 +26,17 @@
             padding: 0 !important;
         }
 
+        /* Forzar marco completo cerrado y sin cortes en el PDF */
+        .pdf-mode#area-impresion-presupuesto {
+            border: 2px solid #b88a73 !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 24px !important;
+            background-color: #ffffff !important;
+        }
+
         /* Ocultar elementos de formulario en modo PDF / Impresión */
         .pdf-mode .no-print-pdf {
             display: none !important;
@@ -150,8 +161,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3] no-print-controls">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Cliente Destino</label>
-                        <select id="presupuesto-cliente" class="w-full bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm focus:outline-none" onchange="recalcularPresupuestoTotal()">
+                        <select id="presupuesto-cliente" class="w-full bg-white border border-[#e8dbd3] rounded-lg px-3 py-2 text-[#2c2c2c] text-sm focus:outline-none" onchange="manejarCambioClientePresupuesto(this)">
                             <option value="Cliente General">-- Seleccionar Cliente CRM --</option>
+                            <option value="CREAR_NUEVO_CLIENTE" class="font-bold text-[#b88a73]">+ Crear Cliente Nuevo...</option>
                         </select>
                     </div>
                     <div>
@@ -225,10 +237,9 @@
                         </div>
                     </div>
 
-                    <!-- Totales y Resumen del Presupuesto (Diseño Corporativo Estándar sin aspecto de formulario) -->
+                    <!-- Totales y Resumen del Presupuesto -->
                     <div class="flex justify-end pt-4 border-t border-[#e8dbd3]">
                         <div class="w-full sm:w-80 space-y-2.5 text-sm bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3]">
-                            <!-- Columnas internas (Costo y Ganancia total) se ocultan limpiamente en PDF -->
                             <div class="flex justify-between text-gray-500 text-xs internal-col">
                                 <span>Costo Total Producción:</span>
                                 <span id="doc-subtotal-costo" class="font-bold text-[#2c2c2c]">$0.00</span>
@@ -238,7 +249,6 @@
                                 <span id="doc-total-ganancia" class="font-bold text-[#b88a73]">$0.00</span>
                             </div>
                             
-                            <!-- Precio Final destacado para el cliente -->
                             <div class="flex justify-between items-center pt-1 text-base font-bold text-[#2c2c2c]">
                                 <span class="uppercase tracking-wide text-xs text-gray-600 font-bold">Total Presupuesto:</span>
                                 <span id="doc-total-usd" class="text-lg font-extrabold text-[#b88a73]">$0.00</span>
@@ -460,7 +470,7 @@
 
     </main>
 
-    <!-- Script Lógico Integral (Supabase + Cotizador Dinámico + PDF Formal y Limpio con Marco Completo) -->
+    <!-- Script Lógico Integral -->
     <script>
         const SUPABASE_URL = 'https://bqzzbetrqanrsgurhcqp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpiZXRycWFucnNndXJoY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU5NjYsImV4cCI6MjEwMzk3MTk2Nn0.DVZ9TDAefdTrfJ2yDoNgoXvy1KOSNQgzEsHngIYPHKM';
@@ -517,6 +527,32 @@
             }
         }
 
+        // --- MANEJO DE CLIENTE DESDE EL COTIZADOR (CREACIÓN AUTOMÁTICA EN CRM) ---
+        async function manejarCambioClientePresupuesto(selectEl) {
+            if (selectEl.value === 'CREAR_NUEVO_CLIENTE') {
+                const nombreNuevo = prompt("Ingrese el nombre o empresa del nuevo cliente:");
+                if (nombreNuevo && nombreNuevo.trim() !== '') {
+                    const telNuevo = prompt("Teléfono / WhatsApp (opcional):") || '';
+                    const instaNuevo = prompt("Instagram (opcional):") || '';
+                    
+                    // Guardar automáticamente en Supabase (CRM)
+                    if (supabaseClient) {
+                        await supabaseClient.from('clientes').insert([{ nombre: nombreNuevo.trim(), tel: telNuevo, instagram: instaNuevo }]);
+                        await cargarClientes(); // Actualizar listados generales del CRM
+                    }
+                    
+                    // Recargar los selectores de clientes
+                    await cargarClientesEnSelects();
+                    
+                    // Seleccionar automáticamente al cliente recién creado
+                    selectEl.value = nombreNuevo.trim();
+                } else {
+                    selectEl.value = "Cliente General";
+                }
+            }
+            recalcularPresupuestoTotal();
+        }
+
         // --- LÓGICA DEL COTIZADOR DINÁMICO DE RENGLONES ---
         let renglonIndex = 0;
 
@@ -553,7 +589,7 @@
                         <input type="number" step="0.01" value="0.00" class="w-24 bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
                     <td class="p-3 text-center align-middle no-print-controls">
-                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -702,7 +738,7 @@
             const internalCols = document.querySelectorAll('.internal-col');
             const printControls = document.querySelectorAll('.no-print-controls');
             
-            // Activar modo PDF formal limpio
+            // Activar modo PDF formal con marco completo asegurado
             areaPresupuesto.classList.add('pdf-mode');
             internalCols.forEach(el => el.style.display = 'none');
             printControls.forEach(el => el.style.display = 'none');
@@ -737,15 +773,15 @@
             });
 
             const opt = {
-                margin:       0.5,
+                margin:       0.3,
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 850 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
             html2pdf().from(areaPresupuesto).set(opt).save().then(() => {
-                // Restaurar vista de la aplicación normal con inputs
+                // Restaurar vista de la aplicación normal
                 areaPresupuesto.classList.remove('pdf-mode');
                 internalCols.forEach(el => el.style.display = '');
                 printControls.forEach(el => el.style.display = '');
@@ -823,7 +859,10 @@
                 selects.forEach(select => {
                     if(data && select) {
                         const valorActual = select.value;
-                        select.innerHTML = '<option value="Cliente General">-- Cliente General --</option>';
+                        select.innerHTML = `
+                            <option value="Cliente General">-- Cliente General --</option>
+                            <option value="CREAR_NUEVO_CLIENTE" class="font-bold text-[#b88a73]">+ Crear Cliente Nuevo...</option>
+                        `;
                         data.forEach(c => {
                             select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
                         });
@@ -1024,6 +1063,7 @@
             await cargarClientes();
             await cargarGastos();
             await cargarHistorialVentas();
+            await cargarClientesEnSelects();
             agregarRenglonServicio();
         };
     </script>
