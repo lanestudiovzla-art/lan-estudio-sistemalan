@@ -26,13 +26,14 @@
             padding: 0 !important;
         }
 
-        /* Forzar marco completo cerrado y sin cortes en el PDF */
+        /* Forzar marco completo cerrado y sin cortes en el PDF con ancho fijo estricto para que no se salga */
         .pdf-mode#area-impresion-presupuesto {
             border: 2px solid #b88a73 !important;
             box-sizing: border-box !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
+            width: 700px !important;
+            max-width: 700px !important;
+            min-width: 700px !important;
+            margin: 0 auto !important;
             padding: 24px !important;
             background-color: #ffffff !important;
         }
@@ -176,8 +177,8 @@
                     </div>
                 </div>
 
-                <!-- Contenedor Imprimible del Presupuesto (Marco completo en todo el contorno de la hoja) -->
-                <div id="area-impresion-presupuesto" class="bg-white p-8 rounded-2xl border-2 border-[#e8dbd3] space-y-6 shadow-xs">
+                <!-- Contenedor Imprimible del Presupuesto (Marco completo en todo el contorno y sin salirse del PDF) -->
+                <div id="area-impresion-presupuesto" class="bg-white p-8 rounded-2xl border-2 border-[#e8dbd3] space-y-6 shadow-xs max-w-full">
                     
                     <!-- Cabecera del Documento PDF -->
                     <div class="flex justify-between items-start border-b border-[#e8dbd3] pb-6">
@@ -589,7 +590,7 @@
                         <input type="number" step="0.01" value="0.00" class="w-24 bg-white border border-[#b88a73] text-[#b88a73] font-bold rounded-lg px-2.5 py-1.5 text-xs text-right precio-cliente-input" oninput="marcarModificadoPrecio('${rowId}')">
                     </td>
                     <td class="p-3 text-center align-middle no-print-controls">
-                        <button onclick="document.getElementById('${rowId}').remove(); recalcalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="document.getElementById('${rowId}').remove(); recalcularPresupuestoTotal();" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -738,7 +739,7 @@
             const internalCols = document.querySelectorAll('.internal-col');
             const printControls = document.querySelectorAll('.no-print-controls');
             
-            // Activar modo PDF formal con marco completo asegurado
+            // Activar modo PDF formal con ancho controlado y marco completo cerrado
             areaPresupuesto.classList.add('pdf-mode');
             internalCols.forEach(el => el.style.display = 'none');
             printControls.forEach(el => el.style.display = 'none');
@@ -773,10 +774,10 @@
             });
 
             const opt = {
-                margin:       0.3,
+                margin:       [0.4, 0.4, 0.4, 0.4],
                 filename:     `Presupuesto_LAN_Estudio_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 850 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 750 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
