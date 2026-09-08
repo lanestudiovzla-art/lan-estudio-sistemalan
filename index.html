@@ -21,7 +21,64 @@
             #area-impresion-presupuesto, #area-impresion-presupuesto * {
                 visibility: visible !important;
             }
+<style>
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+    }
 
+    /* Estilos globales de LAN Estudio para toda la plataforma */
+    body {
+        background-color: #faf8f6 !important;
+        color: #2c2c2c !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    }
+
+    .bg-slate-900, .bg-slate-800, div[class*="bg-slate-"] {
+        background-color: #ffffff !important;
+        border-color: #e8dbd3 !important;
+        color: #2c2c2c !important;
+        box-shadow: 0 4px 20px rgba(184, 138, 115, 0.05) !important;
+    }
+
+    .text-slate-400, .text-gray-400 {
+        color: #888888 !important;
+    }
+    
+    h1, h2, h3, h4, .text-white {
+        color: #2c2c2c !important;
+    }
+
+    button, .btn {
+        background-color: #2c2c2c !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        transition: background-color 0.2s ease !important;
+    }
+    button:hover, .btn:hover {
+        background-color: #404040 !important;
+    }
+
+    button[onclick*="exportar"], .bg-emerald-600, .bg-cyan-600 {
+        background-color: #b88a73 !important;
+    }
+    button[onclick*="exportar"]:hover, .bg-emerald-600:hover, .bg-cyan-600:hover {
+        background-color: #a37762 !important;
+    }
+
+    input, select, textarea {
+        background-color: #ffffff !important;
+        color: #2c2c2c !important;
+        border: 1px solid #e8dbd3 !important;
+        border-radius: 8px !important;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #b88a73 !important;
+        box-shadow: 0 0 0 2px rgba(184, 138, 115, 0.2) !important;
+        outline: none !important;
+    }
+</style>
             #area-impresion-presupuesto {
                 position: absolute !important;
                 left: 0 !important;
