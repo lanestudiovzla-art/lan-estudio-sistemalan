@@ -230,36 +230,75 @@
             </div>
         </section>
 
-        <!-- METODOS DE PAGO FIJOS Y VISIBLES -->
-<div class="space-y-3 bg-[#faf8f6] p-4 rounded-xl border border-[#e8dbd3]">
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Desglose de Formas de Pago</label>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- Pago Móvil / Bs -->
-        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
-            <span class="text-xs font-bold text-gray-700 w-28">Pago Móvil (Bs)</span>
-            <input type="number" id="pago-pagomovil-bs" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
-        </div>
+        <!-- MÓDULO: FACTURA / CAJA Y PAGOS DESGLOSADOS -->
+        <section id="module-caja" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-[#e8dbd3] shadow-sm grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <div class="lg:col-span-2 space-y-4">
+                    <h2 class="text-xl font-bold text-[#2c2c2c] flex items-center"><i class="fa-solid fa-cash-register text-[#b88a73] mr-2"></i> Procesar Venta / Factura</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Seleccionar Cliente (CRM)</label>
+                            <select id="caja-cliente" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] focus:outline-none">
+                                <option value="Cliente General">-- Cliente General --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Descripción del Servicio / Venta</label>
+                            <input type="text" id="caja-concepto" placeholder="Ej: Servicio de diseño y impresión" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] focus:outline-none focus:border-[#b88a73]">
+                        </div>
+                    </div>
 
-        <!-- Efectivo USD -->
-        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
-            <span class="text-xs font-bold text-gray-700 w-28">Efectivo ($)</span>
-            <input type="number" id="pago-efectivo-usd" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
-        </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Total a Pagar ($)</label>
+                            <input type="number" id="caja-total-usd" value="50.00" step="0.01" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#2c2c2c] font-bold" oninput="actualizarTotalesCaja()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Total a Pagar (Bs)</label>
+                            <input type="text" id="caja-total-ves" readonly class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-xl px-4 py-2.5 text-[#b88a73] font-bold">
+                        </div>
+                    </div>
 
-        <!-- Zelle -->
-        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
-            <span class="text-xs font-bold text-gray-700 w-28">Zelle ($)</span>
-            <input type="number" id="pago-zelle-usd" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
-        </div>
+                    <div class="mt-4 border-t border-[#e8dbd3] pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-[#2c2c2c] uppercase tracking-wider">Desglose de Formas de Pago</h3>
+                            <button onclick="agregarMetodoPago()" class="text-xs bg-[#2c2c2c] hover:bg-[#3d3d3d] text-white px-3 py-1.5 rounded-lg transition font-medium"><i class="fa-solid fa-plus mr-1"></i> Añadir Método</button>
+                        </div>
 
-        <!-- Punto de Venta / Tarjeta -->
-        <div class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-[#e8dbd3]">
-            <span class="text-xs font-bold text-gray-700 w-28">Punto / Tarjeta</span>
-            <input type="number" id="pago-punto-bs" placeholder="0.00" class="w-full bg-[#faf8f6] border border-[#e8dbd3] rounded-lg px-3 py-1.5 text-sm text-[#2c2c2c] focus:outline-none" oninput="calcularTotalesCaja()">
-        </div>
-    </div>
-</div>
+                        <div id="lista-pagos" class="space-y-3 max-h-56 overflow-y-auto pr-1">
+                            <!-- Filas inyectadas por JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-[#faf8f6] p-5 rounded-xl border border-[#e8dbd3] flex flex-col justify-between space-y-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-[#e8dbd3] pb-2 mb-3">Resumen de Cobro</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Total Factura:</span>
+                                <span id="resumen-total" class="font-bold text-[#2c2c2c]">$0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Total Abonado:</span>
+                                <span id="resumen-abonado" class="font-bold text-[#b88a73]">$0.00</span>
+                            </div>
+                            <div class="flex justify-between border-t border-[#e8dbd3] pt-2">
+                                <span class="text-gray-500">Restante / Vuelto:</span>
+                                <span id="resumen-restante" class="font-bold text-amber-600">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="procesarPagoFinal()" class="w-full bg-[#b88a73] hover:bg-[#a67963] text-white py-3 rounded-xl font-bold transition shadow-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Guardar y Procesar Venta</span>
+                    </button>
+                </div>
+            </div>
+        </section>
 
         <!-- MÓDULO: INSUMOS Y STOCK -->
         <section id="module-insumos" class="hidden space-y-6">
