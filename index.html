@@ -999,8 +999,7 @@
                 document.getElementById('dash-ventas').innerText = `$${totalVentasGlobal.toFixed(2)}`;
             }
         }
-
-      function actualizarLogo() {
+function actualizarLogo() {
     const input = document.getElementById('logo-file-input');
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -1011,7 +1010,7 @@
         };
         reader.readAsDataURL(input.files[0]);
     }
-
+}
 window.onload = async function() {
     await fetchBCVRate();
     await cargarInsumos();
