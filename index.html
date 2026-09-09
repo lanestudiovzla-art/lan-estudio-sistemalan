@@ -1065,17 +1065,16 @@
                 alert("Por favor selecciona una imagen primero.");
             }
         }
-
-        window.onload = async function() {
-            await fetchBCVRate();
-            await cargarInsumos();
-            await cargarServicios();
-            await cargarClientes();
-            await cargarGastos();
-            await cargarHistorialVentas();
-            await cargarClientesEnSelects();
-            agregarRenglonServicio();
-        };
-    </script>
+window.onload = async function() {
+    await fetchBCVRate();
+    await cargarInsumos();
+    await cargarServicios();
+    await cargarClientes();
+    await cargarGastos();
+    await cargarHistorialVentas();
+    await cargarClientesEnSelects();
+    agregarRengloneServicio();
+};
+</script>
 </body>
 </html>
