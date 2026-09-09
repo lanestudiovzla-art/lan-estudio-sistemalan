@@ -785,82 +785,32 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
-       function actualizarTotalesCaja() {
+     function actualizarTotalesCaja() {
     try {
         const tasa = window.tasaBCV || 807.39;
-
-        // 1. Obtener el total de la factura
-        let totalUSD = 50.00;
-        const inputTotal = document.getElementById('caja-total-usd') || document.getElementById('total-factura');
-        if (inputTotal) {
-            totalUSD = parseFloat(inputTotal.value || inputTotal.innerText) || 50.00;
-        }
+        const totalUSD = parseFloat(document.getElementById('caja-total-usd')?.value || 50);
         const totalVES = totalUSD * tasa;
 
-        // 2. Leer los montos de los métodos de pago fijos de forma segura
-        const inputPagoMovil = document.getElementById('pago-pagomovil-bs');
-        const inputEfectivo = document.getElementById('pago-efectivo-usd');
-        const inputZelle = document.getElementById('pago-zelle-usd');
-        const inputPunto = document.getElementById('pago-punto-bs');
+        const pagoMovil = parseFloat(document.getElementById('pago-pagomovil-bs')?.value || 0) / tasa;
+        const efectivo = parseFloat(document.getElementById('pago-efectivo-usd')?.value || 0);
+        const zelle = parseFloat(document.getElementById('pago-zelle-usd')?.value || 0);
+        const punto = parseFloat(document.getElementById('pago-punto-bs')?.value || 0) / tasa;
 
-        const pagoMovilBs = inputPagoMovil ? (parseFloat(inputPagoMovil.value) || 0) : 0;
-        const efectivoUSD = inputEfectivo ? (parseFloat(inputEfectivo.value) || 0) : 0;
-        const zelleUSD = inputZelle ? (parseFloat(inputZelle.value) || 0) : 0;
-        const puntoBs = inputPunto ? (parseFloat(inputPunto.value) || 0) : 0;
+        const abonadoUSD = efectivo + zelle + pagoMovil + punto;
+        const diferencia = abonadoUSD - totalUSD;
 
-        // 3. Conversiones y sumas
-        const pagoMovilUSD = pagoMovilBs / tasa;
-        const puntoUSD = puntoBs / tasa;
-
-        const totalAbonadoUSD = efectivoUSD + zelleUSD + pagoMovilUSD + puntoUSD;
-        const totalAbonadoVES = totalAbonadoUSD * tasa;
-
-        // 4. Calcular Vuelto o Restante
-        const diferencia = totalAbonadoUSD - totalUSD;
-        let vueltoUSD = 0;
-        let restanteUSD = 0;
-        const labelRestanteVuelto = document.getElementById('label-restante-vuelto');
-
-        if (diferencia >= 0) {
-            vueltoUSD = diferencia;
-            if (labelRestanteVuelto) labelRestanteVuelto.innerText = "Vuelto:";
-        } else {
-            restanteUSD = Math.abs(diferencia);
-            if (labelRestanteVuelto) labelRestanteVuelto.innerText = "Restante:";
-        }
-
-        const vueltoVES = vueltoUSD * tasa;
-        const restanteVES = restanteUSD * tasa;
-
-        // 5. Inyectar de manera segura en el DOM
-        const elTotUSD = document.getElementById('resumen-total-usd');
-        const elTotVES = document.getElementById('resumen-total-ves');
-        if (elTotUSD) elTotUSD.innerText = `$${totalUSD.toFixed(2)}`;
-        if (elTotVES) elTotVES.innerText = `Bs. ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-        const elAboUSD = document.getElementById('resumen-abonado-usd');
-        const elAboVES = document.getElementById('resumen-abonado-ves');
-        if (elAboUSD) elAboUSD.innerText = `$${totalAbonadoUSD.toFixed(2)}`;
-        if (elAboVES) elAboVES.innerText = `Bs. ${totalAbonadoVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-        const elVuelUSD = document.getElementById('resumen-vuelto-usd');
-        const elVuelVES = document.getElementById('resumen-vuelto-ves');
-
-        if (elVuelUSD && elVuelVES) {
-            if (diferencia >= 0) {
-                elVuelUSD.innerText = `$${vueltoUSD.toFixed(2)}`;
-                elVuelUSD.className = "font-bold text-sm text-emerald-600";
-                elVuelVES.innerText = `Bs. ${vueltoVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            } else {
-                elVuelUSD.innerText = `$${restanteUSD.toFixed(2)}`;
-                elVuelUSD.className = "font-bold text-sm text-amber-600";
-                elVuelVES.innerText = `Bs. ${restanteVES.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            }
+        document.getElementById('resumen-total-usd').innerText = `$${totalUSD.toFixed(2)}`;
+        document.getElementById('resumen-abonado-usd').innerText = `$${abonadoUSD.toFixed(2)}`;
+        
+        const elVuelto = document.getElementById('resumen-vuelto-usd');
+        if (elVuelto) {
+            elVuelto.innerText = `$${Math.abs(diferencia).toFixed(2)}`;
+            elVuelto.className = diferencia >= 0 ? "font-bold text-sm text-emerald-600" : "font-bold text-sm text-amber-600";
         }
     } catch (e) {
-        console.error("Error en actualizarTotalesCaja:", e);
+        console.error("Error en caja:", e);
+    }
 }
-     }   
            async function cargarClientesEnSelects() {
             if(!supabaseClient) return;
             try {
