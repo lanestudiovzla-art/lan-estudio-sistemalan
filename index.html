@@ -1005,16 +1005,14 @@
             if(input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    globalLogoHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
-                    document.getElementById('logo-container').innerHTML = globalLogoHTML;
-                    document.getElementById('doc-logo-preview').innerHTML = globalLogoHTML;
-                    alert("¡Logo actualizado con éxito en la aplicación y presupuestos!");
-                }
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                alert("Por favor selecciona una imagen primero.");
-            }
-        }
+                   document.getElementById('logo-container').innerHTML = globalLogoHTML;
+    document.getElementById('doc-logo-preview').innerHTML = globalLogoHTML;
+    alert("Logo actualizado con éxito en la aplicación y presupuestos!");
+    
+    reader.readAsDataURL(input.files[0]);
+} else {
+    alert("Por favor selecciona una imagen primero.");
+}
 window.onload = async function() {
     await fetchBCVRate();
     await cargarInsumos();
