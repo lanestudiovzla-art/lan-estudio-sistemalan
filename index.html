@@ -859,9 +859,9 @@
         }
     } catch (e) {
         console.error("Error en actualizarTotalesCaja:", e);
-    }
 }
-        async function cargarClientesEnSelects() {
+     }   
+           async function cargarClientesEnSelects() {
             if(!supabaseClient) return;
             try {
                 const { data } = await supabaseClient.from('clientes').select('*');
