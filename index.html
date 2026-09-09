@@ -785,7 +785,7 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
-       function actualizarTotalesCaja() {
+        function actualizarTotalesCaja() {
     try {
         const tasa = window.tasaBCV || 807.39;
 
@@ -832,7 +832,7 @@
         const vueltoVES = vueltoUSD * tasa;
         const restanteVES = restanteUSD * tasa;
 
-        // 5. Inyectar de manera segura en el DOM
+        // 5. Inyectar de manera segura en el DOM si existen los elementos
         const elTotUSD = document.getElementById('resumen-total-usd');
         const elTotVES = document.getElementById('resumen-total-ves');
         if (elTotUSD) elTotUSD.innerText = `$${totalUSD.toFixed(2)}`;
